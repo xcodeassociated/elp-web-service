@@ -1,0 +1,22 @@
+#reservations-list {
+}
+
+.reservations-list-table-header-create-event {
+  width: 100%;
+}
+
+.reservations-list-table-header-id {
+  width: 20%;
+}
+
+.reservations-list-table-header-title {
+  width: 20%;
+}
+
+.reservations-list-table-header-description {
+  width: 40%;
+}
+
+.reservations-list-table-header-coordinate {
+  width: 10%;
+}
