@@ -4,6 +4,7 @@ import {connect} from 'react-redux'
 import '../style/Reservations.css'
 import {MDBTable, MDBTableBody, MDBTableHead} from 'mdbreact'
 import {EventWithCategory} from "../model/EventWithCategory"
+import {Event} from "../model/Event"
 import { Page } from "../model/Page"
 import {fetchAllEvents, createEvent, deleteEvent, updateEvent} from '../services/EventService'
 import "../style/Event.css"
@@ -22,6 +23,9 @@ interface IState {
   eventCreateDescription: string,
   eventCreateLatitude: Number,
   eventCreateLongitude: Number
+  eventCreateStart: number
+  eventCreateStop: number,
+  eventCreateCategories: string[],
   eventDeleteId: string,
   eventUpdateId: string,
   dispatch: Function
@@ -40,8 +44,11 @@ class Events extends Component<IProp, IState> {
       error: undefined,
       eventCreateTitle: "",
       eventCreateDescription: "",
+      eventCreateStart: 0,
+      eventCreateStop: 0,
       eventCreateLatitude: 0,
       eventCreateLongitude: 0,
+      eventCreateCategories: [],
       eventDeleteId: "",
       eventUpdateId: "",
       dispatch: () => {}
@@ -60,7 +67,8 @@ class Events extends Component<IProp, IState> {
       let location: Array<Number> = new Array<Number>(this.state.eventCreateLatitude, this.state.eventCreateLongitude)
       let event: EventCommand =
         new EventCommand((this.state.eventUpdateId.length > 0) ? this.state.eventUpdateId : null,
-          this.state.eventCreateTitle, this.state.eventCreateDescription, location)
+          this.state.eventCreateTitle, this.state.eventCreateDescription, this.state.eventCreateStart,
+          this.state.eventCreateStop, location, this.state.eventCreateCategories)
 
       if (this.state.eventUpdateId.length > 0) {
         this.state.dispatch(this.update(event))
@@ -73,15 +81,18 @@ class Events extends Component<IProp, IState> {
     }
   }
 
-  private onUpdateSubmit(id: string, title: string, description: string,
-                         location: Array<Number>): void {
+  private onUpdateSubmit(id: string, title: string, description: string, start: number, stop: number,
+                         location: Array<Number>, categories: string[]): void {
     this.setState({
       ...this.state,
       eventUpdateId: id,
       eventCreateTitle: title,
       eventCreateDescription: description,
+      eventCreateStart: start,
+      eventCreateStop: stop,
       eventCreateLatitude: location[0],
-      eventCreateLongitude: location[1]
+      eventCreateLongitude: location[1],
+      eventCreateCategories: categories
     })
   }
 
@@ -102,7 +113,10 @@ class Events extends Component<IProp, IState> {
       eventCreateTitle: "",
       eventCreateDescription: "",
       eventCreateLatitude: 0,
-      eventCreateLongitude: 0
+      eventCreateLongitude: 0,
+      eventCreateStart: 0,
+      eventCreateStop: 0,
+      eventCreateCategories: [],
     })
   }
 
@@ -229,7 +243,8 @@ class Events extends Component<IProp, IState> {
       )
     } else {
       if (Events.hasToken() && this.state.error === undefined) {
-        let {eventCreateTitle, eventCreateDescription, eventCreateLatitude, eventCreateLongitude} = this.state
+        let {eventCreateTitle, eventCreateDescription, eventCreateLatitude, eventCreateLongitude,
+          eventCreateStart, eventCreateStop, eventCreateCategories} = this.state
         return (
           <div id="reservations-list">
             <div id="event-create-form">
@@ -242,14 +257,32 @@ class Events extends Component<IProp, IState> {
                           <div className="form-group">
                             <label className="location-label">Event Title:</label>
                             <input type="text" className="location-input" name="title"
-                                   onChange={e => this.setState({...this.state, eventCreateTitle: e.target.value})}
+                                   onChange={e => this.setState({...this.state, eventCreateTitle: String(e.target.value)})}
                                    value={eventCreateTitle}/>
                           </div>
                           <div className="form-group">
                             <label className="location-label">Event Description:</label>
                             <input type="text" className="location-input" name="description"
-                                   onChange={e => this.setState({...this.state, eventCreateDescription: e.target.value})}
+                                   onChange={e => this.setState({...this.state, eventCreateDescription: String(e.target.value)})}
                                    value={eventCreateDescription}/>
+                          </div>
+                          <div className="form-group">
+                            <label className="location-label">Event Start:</label>
+                            <input type="text" className="location-input" name="description"
+                                   onChange={e => this.setState({...this.state, eventCreateStart: Number(e.target.value)})}
+                                   value={eventCreateStart}/>
+                          </div>
+                          <div className="form-group">
+                            <label className="location-label">Event Stop:</label>
+                            <input type="text" className="location-input" name="description"
+                                   onChange={e => this.setState({...this.state, eventCreateStop: Number(e.target.value)})}
+                                   value={eventCreateStop}/>
+                          </div>
+                          <div className="form-group">
+                            <label className="location-label">Event Categories:</label>
+                            <input type="text" className="location-input" name="description"
+                                   onChange={e => this.setState({...this.state, eventCreateCategories: String(e.target.value).split(',')})}
+                                   value={eventCreateCategories}/>
                           </div>
                           <div className="form-group">
                             <label>Event Location:</label>
@@ -284,6 +317,8 @@ class Events extends Component<IProp, IState> {
                   <th className="reservations-list-table-header-title">Title</th>
                   <th className="reservations-list-table-header-description">Description</th>
                   <th className="reservations-list-table-header-category">Category</th>
+                  <th className="reservations-list-table-header-start">Start</th>
+                  <th className="reservations-list-table-header-stop">Stop</th>
                   <th className="reservations-list-table-header-coordinate">Latitude</th>
                   <th className="reservations-list-table-header-coordinate">Longitude</th>
                 </tr>
@@ -296,13 +331,16 @@ class Events extends Component<IProp, IState> {
                         <td>{reservation.id}</td>
                         <td>{reservation.title}</td>
                         <td>{reservation.description}</td>
-                        <td>{reservation.categories.map((e: Category) => e.title + " ")}</td>
+                        <td>{(reservation.categories) ? reservation.categories.map((e: Category) => e.title + " ") : ''}</td>
+                        <td>{reservation.start}</td>
+                        <td>{reservation.stop}</td>
                         <td>{reservation.location[0]}</td>
                         <td>{reservation.location[1]}</td>
                         <td>
                           <button className="btn btn-primary"
                                   onClick={() => this.onUpdateSubmit(reservation.id, reservation.title,
-                                    reservation.description, reservation.location)}>Update Event</button>
+                                    reservation.description, reservation.start, reservation.stop,
+                                    reservation.location, reservation.categories.map((e: Category) => e.id))}>Update Event</button>
                           <button className="btn btn-danger"
                                   onClick={() => this.onDeleteSubmit(reservation.id)}>Delete Event</button>
                         </td>
