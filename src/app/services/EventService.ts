@@ -23,9 +23,9 @@ export const fetchAllEvents = (title: string | null): Promise<Response> | null =
       headers: requestHeaders(token),
     }
     if (!title || title.length === 0) {
-      return fetch(`${AppConfig.backend_url}/event/api/v1/events`, requestOptions)
+      return fetch(`${AppConfig.event_service_url}/event/api/v1/events/paged/data`, requestOptions)
     } else {
-      return fetch(`${AppConfig.backend_url}/event/api/v1/events/by/title/` + title, requestOptions)
+      return fetch(`${AppConfig.event_service_url}/event/api/v1/events/by/title/` + title + `/paged/data`, requestOptions)
     }
   } else {
     return null;
@@ -42,7 +42,7 @@ export const createEvent = (event: EventCommand): Promise<Response> | null => {
       headers: requestHeaders(token),
       body: JSON.stringify(event)
     };
-    let url: string = `${AppConfig.backend_url}/event/api/v1/events/create`;
+    let url: string = `${AppConfig.event_service_url}/event/api/v1/events/create`;
     return fetch(url, requestOptions)
   } else {
     return null;
@@ -59,7 +59,7 @@ export const updateEvent = (event: EventCommand): Promise<Response> | null => {
       headers: requestHeaders(token),
       body: JSON.stringify(event)
     };
-    let url: string = `${AppConfig.backend_url}/event/api/v1/events/update`;
+    let url: string = `${AppConfig.event_service_url}/event/api/v1/events/update`;
     return fetch(url, requestOptions)
   } else {
     return null;
@@ -75,7 +75,7 @@ export const deleteEvent = (id: String): Promise<Response> | null  => {
       mode: mode,
       headers: requestHeaders(token),
     };
-    let url: string = `${AppConfig.backend_url}/event/api/v1/events/` + id;
+    let url: string = `${AppConfig.event_service_url}/event/api/v1/events/` + id;
     return fetch(url, requestOptions);
   } else {
     return null;

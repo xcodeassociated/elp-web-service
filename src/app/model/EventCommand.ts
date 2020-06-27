@@ -1,32 +1,17 @@
-export interface ILocation {
-  latitude: String,
-  longitude: String
-}
-
-export class Location implements ILocation{
-  latitude: String
-  longitude: String
-
-  constructor(latitude: string, longitude: string) {
-    this.latitude = latitude
-    this.longitude = longitude
-  }
-}
-
 export interface IEvent {
   id: string | null
   title: String,
   description: String,
-  location: ILocation
+  location: Array<Number>
 }
 
 export class EventCommand implements IEvent {
   id: string | null
   title: String
   description: String
-  location: Location
+  location: Array<Number>
 
-  constructor(id: string | null, title: string, description: string, location: Location) {
+  constructor(id: string | null, title: string, description: string, location: Array<Number>) {
     this.id = id
     this.title = title
     this.description = description

@@ -1,4 +1,6 @@
 export const AppConfig = {
-  // backend_url: 'https://hamashy.asuscomm.com'
-  backend_url: 'http://localhost:8083'
+  // event_service_url: 'https://hamashy.asuscomm.com'
+
+  event_service_url: 'http://localhost:8083',
+  user_service_url: 'http://localhost:8082'
 };

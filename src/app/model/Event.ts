@@ -1,16 +1,8 @@
-export interface Event {
-  id: string;
-  uuid: String;
-  createdDate: Number;
-  version: Number;
-  lastModifiedDate: Number;
-  createdBy: String;
-  modifiedBy: String;
-  // model data:
+import { Base } from "./Base";
+
+export interface Event extends Base {
   title: string;
   description: string,
-  location: {
-    latitude: string,
-    longitude: string
-  }
+  location: Array<Number>,
+  eventCategories: Array<String>
 }

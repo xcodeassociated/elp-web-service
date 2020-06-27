@@ -1,12 +1,14 @@
-import React, {Component} from 'react';
-import {Redirect} from "react-router-dom";
-import {connect} from 'react-redux';
+import React, {Component} from 'react'
+import {Redirect} from "react-router-dom"
+import {connect} from 'react-redux'
 import '../style/Reservations.css'
-import {MDBTable, MDBTableBody, MDBTableHead} from 'mdbreact';
-import {Event} from "../model/Event";
+import {MDBTable, MDBTableBody, MDBTableHead} from 'mdbreact'
+import {EventWithCategory} from "../model/EventWithCategory"
+import { Page } from "../model/Page"
 import {fetchAllEvents, createEvent, deleteEvent, updateEvent} from '../services/EventService'
 import "../style/Event.css"
-import {EventCommand, Location} from "../model/EventCommand";
+import {EventCommand} from "../model/EventCommand"
+import {Category} from "../model/Category";
 
 type Error = {
   code: number,
@@ -14,12 +16,12 @@ type Error = {
 }
 
 interface IState {
-  events?: Array<Event>,
+  events?: Array<EventWithCategory>,
   error?: Error,
   eventCreateTitle: string,
   eventCreateDescription: string,
-  eventCreateLatitude: string,
-  eventCreateLongitude: string
+  eventCreateLatitude: Number,
+  eventCreateLongitude: Number
   eventDeleteId: string,
   eventUpdateId: string,
   dispatch: Function
@@ -38,8 +40,8 @@ class Events extends Component<IProp, IState> {
       error: undefined,
       eventCreateTitle: "",
       eventCreateDescription: "",
-      eventCreateLatitude: "",
-      eventCreateLongitude: "",
+      eventCreateLatitude: 0,
+      eventCreateLongitude: 0,
       eventDeleteId: "",
       eventUpdateId: "",
       dispatch: () => {}
@@ -55,7 +57,7 @@ class Events extends Component<IProp, IState> {
   private onCreateOrUpdateSubmit(e: any): void {
     e.preventDefault()
     if (this.state.eventCreateTitle.length > 0) {
-      let location: Location = new Location(this.state.eventCreateLatitude, this.state.eventCreateLongitude)
+      let location: Array<Number> = new Array<Number>(this.state.eventCreateLatitude, this.state.eventCreateLongitude)
       let event: EventCommand =
         new EventCommand((this.state.eventUpdateId.length > 0) ? this.state.eventUpdateId : null,
           this.state.eventCreateTitle, this.state.eventCreateDescription, location)
@@ -72,13 +74,14 @@ class Events extends Component<IProp, IState> {
   }
 
   private onUpdateSubmit(id: string, title: string, description: string,
-                         location: {latitude: string, longitude: string}): void {
-    this.setState({...this.state,
+                         location: Array<Number>): void {
+    this.setState({
+      ...this.state,
       eventUpdateId: id,
       eventCreateTitle: title,
       eventCreateDescription: description,
-      eventCreateLatitude: location.latitude,
-      eventCreateLongitude: location.longitude
+      eventCreateLatitude: location[0],
+      eventCreateLongitude: location[1]
     })
   }
 
@@ -93,12 +96,13 @@ class Events extends Component<IProp, IState> {
   }
 
   private clearState(): void {
-    this.setState({...this.state,
+    this.setState({
+      ...this.state,
       eventUpdateId: "",
       eventCreateTitle: "",
       eventCreateDescription: "",
-      eventCreateLatitude: "",
-      eventCreateLongitude: ""
+      eventCreateLatitude: 0,
+      eventCreateLongitude: 0
     })
   }
 
@@ -112,23 +116,15 @@ class Events extends Component<IProp, IState> {
   private getAllEvents(): void {
     const onFetchEvents = (response: Response): void => {
       if (response.ok) {
-        response.text().then(text => {
-            let objects: Array<Event> = JSON.parse(text)
-            let validated = objects.map(e => {
-              if (e.location === null) {
-                e.location = {
-                  latitude: "",
-                  longitude: ""
-                }
-                return e
-              } else {
-                return e
-              }
-            })
-            this.setState({
-              ...this.state,
-              events: validated
-            })
+        response.text().then(data => {
+          let page: Page<EventWithCategory> = JSON.parse(data)
+          if (page.content != null) {
+              let objects: Array<EventWithCategory> = page.content
+              this.setState({
+                ...this.state,
+                events: objects
+              })
+            }
           }
         )
       } else {
@@ -161,7 +157,7 @@ class Events extends Component<IProp, IState> {
         eventPromise.then((response: Response) => {
           if (response.ok) {
             response.text().then(text => {
-              let object: Event = JSON.parse(text)
+              let object: EventWithCategory = JSON.parse(text)
               if (this.state.events) {
                 this.setState({
                   ...this.state,
@@ -210,7 +206,7 @@ class Events extends Component<IProp, IState> {
             if (this.state.events) {
               this.setState({
                 ...this.state,
-                events: this.state.events.filter((event: Event) => event.id !== id),
+                events: this.state.events.filter((event: EventWithCategory) => event.id !== id),
                 eventDeleteId: ""
               })
             }
@@ -260,12 +256,12 @@ class Events extends Component<IProp, IState> {
                             <div className="location-form">
                               <label className="location-label">Latitude: </label>
                               <input type="text" className="location-input" name="latitude"
-                                     onChange={e => this.setState({...this.state, eventCreateLatitude: e.target.value})}
-                                     value={eventCreateLatitude}/>
+                                     onChange={e => this.setState({...this.state, eventCreateLatitude: Number(e.target.value)})}
+                                     value={String(eventCreateLatitude)}/>
                               <label className="location-label">Longitude: </label>
                               <input type="text" className="location-input" name="longitude"
-                                     onChange={e => this.setState({...this.state, eventCreateLongitude: e.target.value})}
-                                     value={eventCreateLongitude}/>
+                                     onChange={e => this.setState({...this.state, eventCreateLongitude: Number(e.target.value)})}
+                                     value={String(eventCreateLongitude)}/>
                             </div>
                           </div>
                         </div>
@@ -287,6 +283,7 @@ class Events extends Component<IProp, IState> {
                   <th className="reservations-list-table-header-id">ID</th>
                   <th className="reservations-list-table-header-title">Title</th>
                   <th className="reservations-list-table-header-description">Description</th>
+                  <th className="reservations-list-table-header-category">Category</th>
                   <th className="reservations-list-table-header-coordinate">Latitude</th>
                   <th className="reservations-list-table-header-coordinate">Longitude</th>
                 </tr>
@@ -294,13 +291,14 @@ class Events extends Component<IProp, IState> {
               <MDBTableBody>
                 {this.state.events !== undefined ?
                   this.state.events
-                    .map((reservation: Event, index: number) =>
+                    .map((reservation: EventWithCategory, index: number) =>
                       <tr key={index} className="reservation-item">
                         <td>{reservation.id}</td>
                         <td>{reservation.title}</td>
                         <td>{reservation.description}</td>
-                        <td>{reservation.location.latitude}</td>
-                        <td>{reservation.location.longitude}</td>
+                        <td>{reservation.categories.map((e: Category) => e.title + " ")}</td>
+                        <td>{reservation.location[0]}</td>
+                        <td>{reservation.location[1]}</td>
                         <td>
                           <button className="btn btn-primary"
                                   onClick={() => this.onUpdateSubmit(reservation.id, reservation.title,

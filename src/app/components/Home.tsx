@@ -3,12 +3,14 @@ import { Map, Marker, Popup, TileLayer } from "react-leaflet"
 import { Icon } from "leaflet"
 import "../style/App.css"
 import "../style/Home.css"
-import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
-import 'react-tabs/style/react-tabs.css';
-import { connect } from 'react-redux';
-import { GeolocatedProps, geolocated } from "react-geolocated";
-import { fetchAllEvents } from "../services/EventService";
-import { Event } from "../model/Event";
+import { Tab, Tabs, TabList, TabPanel } from 'react-tabs'
+import 'react-tabs/style/react-tabs.css'
+import { connect } from 'react-redux'
+import { GeolocatedProps, geolocated } from "react-geolocated"
+import { fetchAllEvents } from "../services/EventService"
+import { Page } from "../model/Page"
+import { EventWithCategory } from "../model/EventWithCategory";
+
 // mock data:
 import * as categoriesMock from "../data/mock_categories.json"
 
@@ -28,14 +30,14 @@ interface Category {
 }
 
 interface EventWrapper {
-  item: Event,
+  item: EventWithCategory,
   referance: any | null
 }
 
 interface IItemProps {
   onClick: Function,
-  item: Event,
-  active: Event | null,
+  item: EventWithCategory,
+  active: EventWithCategory | null,
   setRef: any,
   title: String
 }
@@ -99,7 +101,7 @@ interface IHomeProps {
 interface IHomeState {
   items: Array<EventWrapper>,
   categories: Array<Category>,
-  activePark: Event | null,
+  activePark: EventWithCategory | null,
   selectedCategories: Array<Category>,
   searchTitle: string,
   timer: any | null,
@@ -140,14 +142,17 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
 
   private updateEvents(response: Response): void {
     if (response.ok) {
-      response.text().then((text: string) => {
-        let objects: Array<EventWrapper> = JSON.parse(text)
-          .map((e: EventWrapper) => Object.assign({}, {item: e, referance: null}))
-        let validated: Array<EventWrapper> = objects.filter(e => e.item.location !== null)
-        this.setState({
+      response.text().then((data: string) => {
+        let page: Page<EventWithCategory> = JSON.parse(data)
+        if (page.content != null) {
+          let objects: Array<EventWrapper> = page.content
+            .map((e: EventWithCategory) => Object.assign({}, {item: e, referance: null}))
+          let validated: Array<EventWrapper> = objects.filter(e => e.item.location != null)
+          this.setState({
             ...this.state,
             items: validated
           })
+        }
         }
       ).catch((reason: any) => {
         console.error("request error in ok response: " + JSON.stringify(reason))
@@ -188,7 +193,7 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
     e.referance.scrollIntoView()
   }
 
-  private mapItemClick(mapItem: Event): void {
+  private mapItemClick(mapItem: EventWithCategory): void {
     this.setState({...this.state, activePark: mapItem})
     const item = this.state.items.find(e => e.item === mapItem)
     if (item) {
@@ -272,8 +277,8 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
               <Marker
                 key={eventWrapper.item.id}
                 position={[
-                  eventWrapper.item.location.latitude,
-                  eventWrapper.item.location.longitude
+                  eventWrapper.item.location[0],
+                  eventWrapper.item.location[1]
                 ]}
                 onClick={() => {
                   this.mapItemClick(eventWrapper.item)
@@ -284,8 +289,8 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
             {this.state.activePark && (
               <Popup
                 position={[
-                  this.state.activePark.location.latitude,
-                  this.state.activePark.location.longitude
+                  this.state.activePark.location[0],
+                  this.state.activePark.location[1]
                 ]}
                 onClose={() => {
                   this.setState({...this.state, activePark: null})

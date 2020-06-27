@@ -14,7 +14,11 @@
 }
 
 .reservations-list-table-header-description {
-  width: 40%;
+  width: 20%;
+}
+
+.reservations-list-table-header-category {
+  width: 20%;
 }
 
 .reservations-list-table-header-coordinate {
