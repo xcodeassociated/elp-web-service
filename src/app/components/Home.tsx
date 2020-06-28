@@ -14,6 +14,8 @@ import {eventSearch, EventSearch} from "../model/EventSearch";
 import {fetchAllCategories} from "../services/CategoryService";
 import {Category} from "../model/Category";
 import {arrayOptional, optional} from "../model/Types";
+import NumericInput from 'react-numeric-input';
+import Switch from "react-switch";
 
 export const icon = new Icon({
   iconUrl: "/location.svg",
@@ -98,6 +100,8 @@ interface IHomeState {
   activePark: EventWithCategory | null,
   selectedCategories: Array<Category>,
   searchTitle: string,
+  selectedRange: number,
+  includeRange: boolean,
   timer: any | null,
   refreshOn: boolean
 }
@@ -111,6 +115,8 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
       activePark: null,
       selectedCategories: [],
       searchTitle: "",
+      selectedRange: 1,
+      includeRange: false,
       timer: null,
       refreshOn: true
     }
@@ -118,6 +124,7 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
     this.getCategories()
       .then((categories: Array<Category>) => this.setState({...this.state, categories: categories}))
       .catch((error: Error) => console.log(error))
+
   }
 
   public componentDidMount(): void {
@@ -126,6 +133,10 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
 
   public componentWillUnmount(): void {
     clearInterval(this.state.timer);
+  }
+
+  public componentWillReceiveProps(props: Readonly<IHomeProps & GeolocatedProps>, nextContext: any): void {
+
   }
 
   private async getCategories(): Promise<Array<Category>> {
@@ -185,9 +196,12 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
     }
   }
 
-  private searchEvents(title: optional<string>, categories: arrayOptional<Category>): void {
+  private searchEvents(title: optional<string>, categories: arrayOptional<Category>,
+                       range: optional<number>, includeDistance: boolean, location: arrayOptional<Number>): void {
     if (Home.hasToken()) {
-      const search: EventSearch = eventSearch(title, categories)
+      const parsedCategories: arrayOptional<Category> = (categories && categories.length === 0) ? null : categories
+      const search: EventSearch = (includeDistance) ?
+        eventSearch(title, parsedCategories, range, location) : eventSearch(title, parsedCategories, null, null)
       let eventPromise: Promise<Response> | null = searchEvents(search)
       if (eventPromise != null) {
         eventPromise.then((response: Response) => this.updateEvents(response)).catch((reason: any) => {
@@ -219,13 +233,16 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
   }
 
   private areEventsSearchable(): boolean {
-    return (this.state.searchTitle && this.state.searchTitle.length > 0) || this.state.selectedCategories.length > 0
+    return (this.state.searchTitle && this.state.searchTitle.length > 0)
+      || (this.state.selectedCategories.length > 0) || this.state.includeRange
   }
 
   private search(e: any): void {
     if (this.areEventsSearchable()) {
       this.setState({...this.state, refreshOn: false, activePark: null})
-      this.searchEvents(this.state.searchTitle, this.state.selectedCategories)
+      this.searchEvents(this.state.searchTitle, this.state.selectedCategories,
+        this.state.selectedRange, this.state.includeRange,
+        (this.props.coords) ? new Array<Number>(this.props.coords.latitude, this.props.coords.longitude) : null)
     }
   }
 
@@ -244,17 +261,39 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
         <div className="item2">
           {Home.hasToken() ?
             <div className="item2-panel">
-            <div className="categoryBox">
-              {this.state.categories.map((e: Category) => (
-                <CategoryItem key={e.id} item={e} selected={this.state.selectedCategories}
-                              onClick={() => this.categorySelected(e)} />
-              ))}
-            </div>
+              <div className="categoryLabel">
+                <label>Event categories:</label>
+              </div>
+              <div className="categoryBox">
+                {this.state.categories.map((e: Category) => (
+                  <CategoryItem key={e.id} item={e} selected={this.state.selectedCategories}
+                                onClick={() => this.categorySelected(e)} />
+                ))}
+              </div>
             <div className="searchBox">
               <input className="searchInput" type='text' name='searchInput' placeholder='Search Event...' value={this.state.searchTitle}
                      onChange={this.handleSearchInputChange.bind(this)}/>
               <button className="searchButton" name='searchButton' onClick={this.search.bind(this)}>Search</button>
               <button className="clearButton" name='clearButton' onClick={this.clear.bind(this)}>Clear</button>
+              {(this.props.coords) ?
+                <div className="locationBox">
+                  <span className="distanceInput">
+                    <span>
+                      <label>
+                        Latitude: <b>{this.props.coords.latitude}</b> Longitude: <b>{this.props.coords.longitude}</b>
+                      </label>
+                    </span>
+                    <span> Distance: </span>
+                    <NumericInput min={1} max={10} value={this.state.selectedRange} onChange={(valueAsNumber: number) => {
+                      this.setState({...this.state, selectedRange: valueAsNumber})
+                    }} className="distanceInput" />
+                  </span>
+                  <span className="locationInclude">
+                    <Switch checked={this.state.includeRange}
+                            onChange={() => {this.setState({...this.state, includeRange: !this.state.includeRange})}}
+                            height={20} />
+                  </span>
+                </div> : null}
             </div>
           </div> : null}
           {Home.hasToken() ?

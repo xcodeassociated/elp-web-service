@@ -39,7 +39,8 @@ export class EventSearch extends BaseSearch implements IEventSearch {
 
 }
 
-export const eventSearch = (title: optional<string>, categories: arrayOptional<Category>): EventSearch => {
+export const eventSearch = (title: optional<string>, categories: arrayOptional<Category>,
+                            range: optional<number>, location: arrayOptional<Number>): EventSearch => {
   return new EventSearch(null,null,null,null,null,title,
-    null,null,null,null,null,categories)
+    null,null,null,location,range,categories)
 }

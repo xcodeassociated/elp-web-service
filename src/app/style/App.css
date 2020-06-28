@@ -17,14 +17,14 @@
 .item2 > .item2-panel {
   grid-area: menu;
   display: block;
-  height: 10vh;
+  height: 15vh;
 }
 .item2 > .item2-list {
   grid-area: menu;
   overflow-x: scroll;
   overflow-y: scroll;
   display: block;
-  height: 84vh;
+  height: 79vh;
 }
 .item3 {
   grid-area: main;

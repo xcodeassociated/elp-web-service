@@ -40,6 +40,11 @@
   overflow-x: auto;
 }
 
+.categoryLabel {
+  padding-top: 2%;
+  padding-left: 1%;
+}
+
 .categoryBox > .categoryItem {
   font-size: 12px;
   background-color: lightblue;
@@ -73,6 +78,25 @@
 .searchBox > .clearButton {
   width: 16%;
   height: 25px;
+}
+
+.locationBox {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  width: 100%;
+}
+
+.locationBox > .distanceInput {
+  width: 90%;
+  height: 25px;
+  margin-right: 1%;
+  vertical-align: middle;
+}
+
+.locationBox > .locationInclude {
+  width: 10%;
+  height: 25px;
+  vertical-align: middle;
 }
 
 .login-hint {
