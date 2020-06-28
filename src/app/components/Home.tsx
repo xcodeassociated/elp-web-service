@@ -146,8 +146,8 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
     const response: Response | null = await fetchAllCategories()
     if (response && response.ok) {
       const data: string = await response.text()
-      const categories: Page<Category>= JSON.parse(data)
-      return categories.content
+      const categories: Array<Category>= JSON.parse(data)
+      return categories
     } else {
       throw new Error("Could not fetch categories")
     }
@@ -283,7 +283,7 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
                   <span className="distanceInput">
                     <span>
                       <label>
-                        Latitude: <b>{this.props.coords.latitude}</b> Longitude: <b>{this.props.coords.longitude}</b>
+                        Latitude: <b>{String(this.props.coords.latitude).substring(0, 7)}</b> Longitude: <b>{String(this.props.coords.longitude).substring(0, 7)}</b>
                       </label>
                     </span>
                     <span> Distance: </span>

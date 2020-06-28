@@ -1,5 +1,5 @@
 import {AppConfig} from "../config/AppConfig"
-import {CategoryCommand} from "../model/CategoryCommand"
+import {UserDataCommand} from "../model/UserDataCommand";
 
 const getToken = (): string | null => {
   return localStorage.getItem('token')
@@ -13,7 +13,7 @@ const requestHeaders = (token: string) => [
   ['Authorization', `Bearer ${token}`]
 ]
 
-export const fetchAllCategories = (): Promise<Response> | null => {
+export const fetchUserData = (): Promise<Response> | null => {
   const token = getToken()
   if (token) {
     let mode: RequestMode = "cors"
@@ -22,13 +22,13 @@ export const fetchAllCategories = (): Promise<Response> | null => {
       mode: mode,
       headers: requestHeaders(token),
     }
-    return fetch(`${AppConfig.event_service_url}/event/api/v1/category`, requestOptions)
+    return fetch(`${AppConfig.event_service_url}/event/api/v1/userdata/data`, requestOptions)
   } else {
     return null
   }
 }
 
-export const saveCategory = (event: CategoryCommand): Promise<Response> | null => {
+export const saveUserData = (data: UserDataCommand): Promise<Response> | null => {
   const token = getToken()
   if (token) {
     let mode: RequestMode = "cors"
@@ -36,27 +36,12 @@ export const saveCategory = (event: CategoryCommand): Promise<Response> | null =
       method: 'POST',
       mode: mode,
       headers: requestHeaders(token),
-      body: JSON.stringify(event)
+      body: JSON.stringify(data)
     }
-    let url: string = `${AppConfig.event_service_url}/event/api/v1/category/save`
+    let url: string = `${AppConfig.event_service_url}/event/api/v1/userdata/save`
     return fetch(url, requestOptions)
   } else {
     return null
   }
 }
 
-export const deleteCategory = (id: String): Promise<Response> | null  => {
-  const token = getToken()
-  if (token) {
-    let mode: RequestMode = "cors"
-    const requestOptions = {
-      method: 'DELETE',
-      mode: mode,
-      headers: requestHeaders(token),
-    }
-    let url: string = `${AppConfig.event_service_url}/event/api/v1/category/` + id
-    return fetch(url, requestOptions)
-  } else {
-    return null
-  }
-}

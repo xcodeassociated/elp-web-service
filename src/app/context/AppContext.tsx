@@ -73,15 +73,18 @@ class AppContext extends Component<PropsAppRouter, IStateAppRouter> {
                     </Nav.Item>
                     {
                       !this.isLoggedIn() ?
-                        null
-                      :
+                        null :
                         <Nav.Item as="li">
                           <NavLink className="nav-link" activeClassName="active" to="/events">Events</NavLink>
                         </Nav.Item>
                     }
-                    <Nav.Item as="li">
-                      <NavLink className="nav-link" activeClassName="active" to="/settings">Settings</NavLink>
-                    </Nav.Item>
+                    {
+                      !this.isLoggedIn() ?
+                        null :
+                        <Nav.Item as="li">
+                          <NavLink className="nav-link" activeClassName="active" to="/settings">Settings</NavLink>
+                        </Nav.Item>
+                    }
                     {
                       this.isLoggedIn() ?
                         <button type="button" onClick={() => {
