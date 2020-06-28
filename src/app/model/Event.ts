@@ -1,10 +1,34 @@
-import { Base } from "./Base";
+import {Base, IBase} from "./Base"
 
-export interface Event extends Base {
-  title: string;
+export interface IEvent extends IBase {
+  title: string
   description: string,
   start: number,
   stop: number,
   location: Array<Number>,
   eventCategories: Array<String>
+}
+
+export class Event extends Base implements IEvent {
+  title: string
+  description: string
+  start: number
+  stop: number
+  location: Array<Number>
+  eventCategories: Array<String>
+
+
+  constructor(createdBy: string, createdDate: number, id: string, lastModifiedDate: number,
+              modifiedBy: string, uuid: string, version: number, title: string, description: string,
+              start: number, stop: number, location: Array<Number>, eventCategories: Array<String>) {
+
+    super(createdBy, createdDate, id, lastModifiedDate, modifiedBy, uuid, version)
+
+    this.title = title
+    this.description = description
+    this.start = start
+    this.stop = stop
+    this.location = location
+    this.eventCategories = eventCategories
+  }
 }

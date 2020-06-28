@@ -7,12 +7,12 @@ import { Tab, Tabs, TabList, TabPanel } from 'react-tabs'
 import 'react-tabs/style/react-tabs.css'
 import { connect } from 'react-redux'
 import { GeolocatedProps, geolocated } from "react-geolocated"
-import { fetchAllEvents } from "../services/EventService"
+import { fetchAllEvents, searchEvents } from "../services/EventService"
 import { Page } from "../model/Page"
 import { EventWithCategory } from "../model/EventWithCategory";
-
-// mock data:
-import * as categoriesMock from "../data/mock_categories.json"
+import {EventSearch, eventSearchWithTitle} from "../model/EventSearch";
+import {fetchAllCategories} from "../services/CategoryService";
+import {Category} from "../model/Category";
 
 export const icon = new Icon({
   iconUrl: "/location.svg",
@@ -23,11 +23,6 @@ export const userIcon = new Icon({
   iconUrl: "/user.svg",
   iconSize: [25, 25]
 })
-
-interface Category {
-  id: number,
-  name: String
-}
 
 interface EventWrapper {
   item: EventWithCategory,
@@ -70,9 +65,7 @@ class Item extends Component<IItemProps> {
 interface ICategoryItem {
   onClick: Function,
   selected: Array<Object>,
-  item: {
-    name: String
-  },
+  item: Category
 }
 
 class CategoryItem extends Component<ICategoryItem> {
@@ -88,7 +81,7 @@ class CategoryItem extends Component<ICategoryItem> {
   public render() {
     return (
       <div className={this.props.selected.includes(this.props.item) ? 'categoryItem active' : 'categoryItem'}>
-        <a onClick={() => this.active()}>{this.props.item.name}</a>
+        <a onClick={() => this.active()}>{this.props.item.title}</a>
       </div>
     )
   }
@@ -113,7 +106,7 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
     super(props, context)
     this.state = {
       items: [],
-      categories: categoriesMock.categories,
+      categories: [],
       activePark: null,
       selectedCategories: [],
       searchTitle: "",
@@ -121,6 +114,9 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
       refreshOn: true
     }
     setTimeout(() => this.getEvents(), 500);
+    this.getCategories()
+      .then((categories: Array<Category>) => this.setState({...this.state, categories: categories}))
+      .catch((error: Error) => console.log(error))
   }
 
   public componentDidMount(): void {
@@ -129,6 +125,17 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
 
   public componentWillUnmount(): void {
     clearInterval(this.state.timer);
+  }
+
+  private async getCategories(): Promise<Array<Category>> {
+    const response: Response | null = await fetchAllCategories()
+    if (response && response.ok) {
+      const data: string = await response.text()
+      const categories: Page<Category>= JSON.parse(data)
+      return categories.content
+    } else {
+      throw new Error("Could not fetch categories")
+    }
   }
 
   private initRefreshTimer(): void {
@@ -168,7 +175,7 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
 
   private getEvents(): void {
     if (Home.hasToken() && this.state.refreshOn) {
-      let eventPromise: Promise<Response> | null = fetchAllEvents(null)
+      let eventPromise: Promise<Response> | null = fetchAllEvents()
       if (eventPromise != null) {
         eventPromise.then((response: Response) => this.updateEvents(response)).catch((reason: any) => {
           console.error("request error 3: " + JSON.stringify(reason))
@@ -179,7 +186,8 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
 
   private searchEvents(title: string): void {
     if (Home.hasToken()) {
-      let eventPromise: Promise<Response> | null = fetchAllEvents(title)
+      const search: EventSearch = eventSearchWithTitle(title)
+      let eventPromise: Promise<Response> | null = searchEvents(search)
       if (eventPromise != null) {
         eventPromise.then((response: Response) => this.updateEvents(response)).catch((reason: any) => {
           console.error("request error: " + JSON.stringify(reason))
@@ -232,7 +240,7 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
           {Home.hasToken() ?
             <div className="item2-panel">
             <div className="categoryBox">
-              {this.state.categories.map(e => (
+              {this.state.categories.map((e: Category) => (
                 <CategoryItem key={e.id} item={e} selected={this.state.selectedCategories}
                               onClick={() => this.categorySelected(e)} />
               ))}

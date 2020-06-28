@@ -154,7 +154,7 @@ class Events extends Component<IProp, IState> {
       }
     }
 
-    let eventPromise: Promise<Response> | null = fetchAllEvents(null)
+    let eventPromise: Promise<Response> | null = fetchAllEvents()
     if (eventPromise != null) {
       eventPromise.then(onFetchEvents)
     }

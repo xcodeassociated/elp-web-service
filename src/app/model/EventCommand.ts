@@ -1,23 +1,25 @@
-export interface IEvent {
-  id: string | null
-  title: String,
-  description: String,
+import {optional} from "./Types"
+
+export interface IEventCommand {
+  id: optional<string>
+  title: string,
+  description: string,
   start: number,
   stop: number,
   location: Array<Number>,
   eventCategories: Array<String>
 }
 
-export class EventCommand implements IEvent {
-  id: string | null
-  title: String
-  description: String
+export class EventCommand implements IEventCommand {
+  id: optional<string>
+  title: string
+  description: string
   start: number
   stop: number
   location: Array<Number>
   eventCategories: Array<String>
 
-  constructor(id: string | null, title: string, description: string,
+  constructor(id: optional<string>, title: string, description: string,
               start: number, stop: number, location: Array<Number>,
               eventCategories: Array<String>) {
     this.id = id
