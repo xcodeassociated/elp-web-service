@@ -10,9 +10,10 @@ import { GeolocatedProps, geolocated } from "react-geolocated"
 import { fetchAllEvents, searchEvents } from "../services/EventService"
 import { Page } from "../model/Page"
 import { EventWithCategory } from "../model/EventWithCategory";
-import {EventSearch, eventSearchWithTitle} from "../model/EventSearch";
+import {eventSearch, EventSearch} from "../model/EventSearch";
 import {fetchAllCategories} from "../services/CategoryService";
 import {Category} from "../model/Category";
+import {arrayOptional, optional} from "../model/Types";
 
 export const icon = new Icon({
   iconUrl: "/location.svg",
@@ -184,9 +185,9 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
     }
   }
 
-  private searchEvents(title: string): void {
+  private searchEvents(title: optional<string>, categories: arrayOptional<Category>): void {
     if (Home.hasToken()) {
-      const search: EventSearch = eventSearchWithTitle(title)
+      const search: EventSearch = eventSearch(title, categories)
       let eventPromise: Promise<Response> | null = searchEvents(search)
       if (eventPromise != null) {
         eventPromise.then((response: Response) => this.updateEvents(response)).catch((reason: any) => {
@@ -217,10 +218,14 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
     })
   }
 
+  private areEventsSearchable(): boolean {
+    return (this.state.searchTitle && this.state.searchTitle.length > 0) || this.state.selectedCategories.length > 0
+  }
+
   private search(e: any): void {
-    if (this.state.searchTitle && this.state.searchTitle.length > 0) {
+    if (this.areEventsSearchable()) {
       this.setState({...this.state, refreshOn: false, activePark: null})
-      this.searchEvents(this.state.searchTitle)
+      this.searchEvents(this.state.searchTitle, this.state.selectedCategories)
     }
   }
 
@@ -229,7 +234,7 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
   }
 
   private clear(e: any): void {
-    this.setState({...this.state, searchTitle: "", refreshOn: true})
+    this.setState({...this.state, searchTitle: "", selectedCategories: [], refreshOn: true})
     this.getEvents()
   }
 

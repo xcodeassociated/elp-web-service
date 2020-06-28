@@ -9,7 +9,6 @@ export class Category extends Base implements ICategory {
   title: string
   description: string
 
-
   constructor(createdBy: string, createdDate: number, id: string, lastModifiedDate: number,
               modifiedBy: string, uuid: string, version: number, title: string, description: string) {
 
