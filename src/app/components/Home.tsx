@@ -120,11 +120,8 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
       timer: null,
       refreshOn: true
     }
-    setTimeout(() => this.getEvents(), 500);
-    this.getCategories()
-      .then((categories: Array<Category>) => this.setState({...this.state, categories: categories}))
-      .catch((error: Error) => console.log(error))
-
+    setTimeout(() => this.getEvents(), 250);
+    setTimeout(() => this.fetchAndUpdateCategories(), 250);
   }
 
   public componentDidMount(): void {
@@ -137,6 +134,12 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
 
   public componentWillReceiveProps(props: Readonly<IHomeProps & GeolocatedProps>, nextContext: any): void {
 
+  }
+
+  private fetchAndUpdateCategories(): void {
+    this.getCategories()
+      .then((categories: Array<Category>) => this.setState({...this.state, categories: categories}))
+      .catch((error: Error) => console.log(error))
   }
 
   private async getCategories(): Promise<Array<Category>> {
@@ -300,8 +303,8 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
           <div className="item2-list">
             <Tabs>
               <TabList>
+                <Tab>All</Tab>
                 <Tab>Recommended</Tab>
-                <Tab>All Events</Tab>
               </TabList>
                 <TabPanel>
                   {this.state.items.map(e => (

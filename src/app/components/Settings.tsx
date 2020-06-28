@@ -5,12 +5,12 @@ interface IAboutProps {
   isRedirectHome: boolean
 }
 
-class About extends Component<IAboutProps> {
+class Settings extends Component<IAboutProps> {
 
   public render() {
     return (
       <div>
-        <p>About Page</p>
+        <p>Settings Page</p>
       </div>
     )
   }
@@ -22,4 +22,4 @@ const mapStateToProps = (state) => {
   };
 };
 
-export default connect(mapStateToProps)(About);
+export default connect(mapStateToProps)(Settings);

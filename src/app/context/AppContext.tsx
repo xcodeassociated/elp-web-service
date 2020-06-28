@@ -1,7 +1,6 @@
 import React, {Component, ReactChild} from "react";
 import {NavLink, Route, Router, Switch} from 'react-router-dom'
 import Home from "../components/Home";
-import About from "../components/About";
 import {Nav} from "react-bootstrap";
 import history from './History';
 import {connect} from 'react-redux';
@@ -13,6 +12,7 @@ import {loginAction, logoutAction, redirectHomeAction} from '../store/actions/Ac
 import NotFound from "../components/error/NotFound";
 import "../style/App.css";
 import "../style/AppRouter.css";
+import Settings from "../components/Settings";
 
 type NamedProps = {
   data?: any
@@ -35,7 +35,7 @@ class AppContext extends Component<PropsAppRouter, IStateAppRouter> {
     this.props.dispatch(redirectHomeAction(true))
   }
 
-  private static isLoggedIn(): boolean {
+  private isLoggedIn(): boolean {
     return localStorage.getItem('token') != null
   }
 
@@ -59,7 +59,9 @@ class AppContext extends Component<PropsAppRouter, IStateAppRouter> {
     return (
       <KeycloakProvider keycloak={keycloak}
                         onEvent={this.onKeycloakEvent}
-                        onTokens={this.onKeycloakTokens}>
+                        onTokens={this.onKeycloakTokens}
+                        autoRefreshToken={true}
+      >
         <Router history={history}>
           <div className="grid-container">
             <div className="item1">
@@ -70,7 +72,7 @@ class AppContext extends Component<PropsAppRouter, IStateAppRouter> {
                       <NavLink className="nav-link" activeClassName="active" to="/" exact>Home</NavLink>
                     </Nav.Item>
                     {
-                      !AppContext.isLoggedIn() ?
+                      !this.isLoggedIn() ?
                         null
                       :
                         <Nav.Item as="li">
@@ -78,14 +80,14 @@ class AppContext extends Component<PropsAppRouter, IStateAppRouter> {
                         </Nav.Item>
                     }
                     <Nav.Item as="li">
-                      <NavLink className="nav-link" activeClassName="active" to="/about">About</NavLink>
+                      <NavLink className="nav-link" activeClassName="active" to="/settings">Settings</NavLink>
                     </Nav.Item>
                     {
-                      AppContext.isLoggedIn() ?
+                      this.isLoggedIn() ?
                         <button type="button" onClick={() => {
+                          keycloak.logout()
                           this.props.dispatch(redirectHomeAction(true))
                           this.props.dispatch(logoutAction())
-                          keycloak.logout()
                         }}>
                           Logout
                         </button>
@@ -103,7 +105,7 @@ class AppContext extends Component<PropsAppRouter, IStateAppRouter> {
                     <Route exact path='/' component={Home}/>
                     <Route exact path='/home/:param?' component={HomeParam}/>
                     <Route exact path='/events' component={Events} />
-                    <Route exact path='/about' component={About}/>
+                    <Route exact path='/settings' component={Settings}/>
                     <Route component={NotFound}/>
                   </Switch>
                 </div>
