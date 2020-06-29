@@ -255,9 +255,11 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
         : eventSearch(title, parsedCategories, null, null, this.state.searchActive)
       let eventPromise: Promise<Response> | null = searchEvents(search)
       if (eventPromise != null) {
-        eventPromise.then((response: Response) => this.updateEvents(response)).catch((reason: any) => {
-          console.error("request error: " + JSON.stringify(reason))
+        eventPromise.then((response: Response) => {
+          this.updateEvents(response)
+          this.eventTabSelected(0)
         })
+          .catch((reason: any) => console.error("request error: " + JSON.stringify(reason)))
       }
     }
   }
@@ -292,7 +294,7 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
 
   private search(e: any): void {
     if (this.areEventsSearchable()) {
-      this.setState({...this.state, refreshOn: false, activePark: null, eventListTabIndex: 0})
+      this.setState({...this.state, refreshOn: false, activePark: null})
       this.searchEvents(this.state.searchTitle, this.state.selectedCategories,
         this.state.selectedRange, this.state.includeRange,
         (this.props.coords) ? new Array<Number>(this.props.coords.latitude, this.props.coords.longitude) : null)
