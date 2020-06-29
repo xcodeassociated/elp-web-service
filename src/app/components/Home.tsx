@@ -7,15 +7,16 @@ import { Tab, Tabs, TabList, TabPanel } from 'react-tabs'
 import 'react-tabs/style/react-tabs.css'
 import { connect } from 'react-redux'
 import { GeolocatedProps, geolocated } from "react-geolocated"
-import { fetchAllEvents, searchEvents } from "../services/EventService"
+import {fetchAllEvents, fetchAllRecommendedEvents, searchEvents} from "../services/EventService"
 import { Page } from "../model/Page"
-import { EventWithCategory } from "../model/EventWithCategory";
-import {eventSearch, EventSearch} from "../model/EventSearch";
-import {fetchAllCategories} from "../services/CategoryService";
-import {Category} from "../model/Category";
-import {arrayOptional, optional} from "../model/Types";
-import NumericInput from 'react-numeric-input';
-import Switch from "react-switch";
+import { EventWithCategory } from "../model/EventWithCategory"
+import {eventSearch, EventSearch} from "../model/EventSearch"
+import {fetchAllCategories} from "../services/CategoryService"
+import {Category} from "../model/Category"
+import {Location} from "../model/Location"
+import {arrayOptional, optional} from "../model/Types"
+import NumericInput from 'react-numeric-input'
+import Switch from "react-switch"
 
 export const icon = new Icon({
   iconUrl: "/location.svg",
@@ -95,7 +96,8 @@ interface IHomeProps {
 }
 
 interface IHomeState {
-  items: Array<EventWrapper>,
+  events: Array<EventWrapper>,
+  recommended: Array<EventWrapper>,
   categories: Array<Category>,
   activePark: EventWithCategory | null,
   selectedCategories: Array<Category>,
@@ -103,14 +105,16 @@ interface IHomeState {
   selectedRange: number,
   includeRange: boolean,
   timer: any | null,
-  refreshOn: boolean
+  refreshOn: boolean,
+  recommendedTab: boolean
 }
 
 class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
   constructor(props, context) {
     super(props, context)
     this.state = {
-      items: [],
+      events: [],
+      recommended: [],
       categories: [],
       activePark: null,
       selectedCategories: [],
@@ -118,9 +122,11 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
       selectedRange: 1,
       includeRange: false,
       timer: null,
-      refreshOn: true
+      refreshOn: true,
+      recommendedTab: false
     }
     setTimeout(() => this.getEvents(), 250);
+    setTimeout(() => this.getRecommendedEvents(), 250);
     setTimeout(() => this.fetchAndUpdateCategories(), 250);
   }
 
@@ -146,7 +152,7 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
     const response: Response | null = await fetchAllCategories()
     if (response && response.ok) {
       const data: string = await response.text()
-      const categories: Array<Category>= JSON.parse(data)
+      const categories: Array<Category> = JSON.parse(data)
       return categories
     } else {
       throw new Error("Could not fetch categories")
@@ -154,7 +160,8 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
   }
 
   private initRefreshTimer(): void {
-    let timer = setInterval(() => this.getEvents(), 10000)
+    let timer = setInterval(() =>
+      (this.state.recommendedTab) ? this.getRecommendedEvents() : this.getEvents(), 10000)
     this.setState({...this.state, timer: timer})
   }
 
@@ -172,9 +179,34 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
           let validated: Array<EventWrapper> = objects.filter(e => e.item.location != null)
           this.setState({
             ...this.state,
-            items: validated
+            events: validated
           })
         }
+      }).catch((reason: any) => {
+        console.error("request error in ok response: " + JSON.stringify(reason))
+      })
+    } else {
+      response.text().then(text => {
+        console.error("request return non-ok response: " + JSON.stringify(text))
+      }).catch((reason: any) => {
+        console.error("request error in non-ok response: " + JSON.stringify(reason))
+      })
+    }
+  }
+
+  private updateRecommendedEvents(response: Response): void {
+    if (response.ok) {
+      response.text().then((data: string) => {
+          let page: Page<EventWithCategory> = JSON.parse(data)
+          if (page.content != null) {
+            let objects: Array<EventWrapper> = page.content
+              .map((e: EventWithCategory) => Object.assign({}, {item: e, referance: null}))
+            let validated: Array<EventWrapper> = objects.filter(e => e.item.location != null)
+            this.setState({
+              ...this.state,
+              recommended: validated
+            })
+          }
         }
       ).catch((reason: any) => {
         console.error("request error in ok response: " + JSON.stringify(reason))
@@ -195,6 +227,17 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
         eventPromise.then((response: Response) => this.updateEvents(response)).catch((reason: any) => {
           console.error("request error 3: " + JSON.stringify(reason))
         })
+      }
+    }
+  }
+
+  private getRecommendedEvents(): void {
+    if (Home.hasToken() && this.state.refreshOn && this.props.coords) {
+      let eventPromise: Promise<Response> | null =
+        fetchAllRecommendedEvents(new Location([this.props.coords.latitude, this.props.coords.longitude]))
+      if (eventPromise != null) {
+        eventPromise.then((response: Response) => this.updateRecommendedEvents(response))
+          .catch((reason: any) => console.error("request error 3: " + JSON.stringify(reason)))
       }
     }
   }
@@ -221,7 +264,9 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
 
   private mapItemClick(mapItem: EventWithCategory): void {
     this.setState({...this.state, activePark: mapItem})
-    const item = this.state.items.find(e => e.item === mapItem)
+    const item = (this.state.recommendedTab)
+      ? this.state.recommended.find(e => e.item === mapItem)
+      : this.state.events.find(e => e.item === mapItem)
     if (item) {
       item.referance.scrollIntoView()
     }
@@ -247,6 +292,10 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
         this.state.selectedRange, this.state.includeRange,
         (this.props.coords) ? new Array<Number>(this.props.coords.latitude, this.props.coords.longitude) : null)
     }
+  }
+
+  private eventTabSelected(index: number) {
+    this.setState({...this.state, recommendedTab: (index === 1)})
   }
 
   private handleSearchInputChange(event): void {
@@ -301,13 +350,13 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
           </div> : null}
           {Home.hasToken() ?
           <div className="item2-list">
-            <Tabs>
+            <Tabs onSelect={(index: number) => this.eventTabSelected(index)}>
               <TabList>
                 <Tab>All</Tab>
                 <Tab>Recommended</Tab>
               </TabList>
                 <TabPanel>
-                  {this.state.items.map(e => (
+                  {this.state.events.map(e => (
                     <Item title={e.item.title}
                           item={e.item}
                           active={this.state.activePark}
@@ -317,29 +366,56 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
                     />
                   ))}
                 </TabPanel>
-              <TabPanel>
-              </TabPanel>
+                <TabPanel>
+                  {(this.state.recommended.length > 0) ?
+                    this.state.recommended.map(e => (
+                      <Item title={e.item.title}
+                            item={e.item}
+                            active={this.state.activePark}
+                            onClick={() => this.itemClick(e)}
+                            setRef={el => e.referance = el}
+                            key={e.item.id}
+                      />
+                    )) : <p>No recommended events in this area</p>}
+                </TabPanel>
             </Tabs>
           </div> : <p className="login-hint">Please login to see events</p>}
         </div>
         <div className="item3">
-          <Map center={[52.23, 21.00]} zoom={13}>
+          <Map center={(this.props.coords)
+            ? [this.props.coords.latitude, this.props.coords.longitude] : [52.23, 21.00]}
+               zoom={13}>
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
             />
-            {this.state.items.map(eventWrapper => (
-              <Marker
-                key={eventWrapper.item.id}
-                position={[
-                  eventWrapper.item.location[0],
-                  eventWrapper.item.location[1]
-                ]}
-                onClick={() => {
-                  this.mapItemClick(eventWrapper.item)
-                }}
-                icon={icon}
-              />
+            {(this.state.recommendedTab) ?
+              this.state.recommended.map(eventWrapper => (
+                <Marker
+                  key={eventWrapper.item.id}
+                  position={[
+                    eventWrapper.item.location[0],
+                    eventWrapper.item.location[1]
+                  ]}
+                  onClick={() => {
+                    this.mapItemClick(eventWrapper.item)
+                  }}
+                  icon={icon}
+                />
+              ))
+              :
+              this.state.events.map(eventWrapper => (
+                <Marker
+                  key={eventWrapper.item.id}
+                  position={[
+                    eventWrapper.item.location[0],
+                    eventWrapper.item.location[1]
+                  ]}
+                  onClick={() => {
+                    this.mapItemClick(eventWrapper.item)
+                  }}
+                  icon={icon}
+                />
             ))}
             {this.state.activePark && (
               <Popup

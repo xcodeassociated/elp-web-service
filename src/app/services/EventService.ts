@@ -1,6 +1,7 @@
 import {AppConfig} from "../config/AppConfig"
 import {EventCommand} from "../model/EventCommand"
 import {EventSearch} from "../model/EventSearch"
+import {Location} from "../model/Location"
 
 const getToken = (): string | null => {
   return localStorage.getItem('token')
@@ -24,6 +25,22 @@ export const fetchAllEvents = (): Promise<Response> | null => {
       headers: requestHeaders(token),
     }
     return fetch(`${AppConfig.event_service_url}/event/api/v1/events/paged/data`, requestOptions)
+  } else {
+    return null
+  }
+}
+
+export const fetchAllRecommendedEvents = (location: Location): Promise<Response> | null => {
+  const token = getToken()
+  if (token) {
+    let mode: RequestMode = "cors"
+    const requestOptions = {
+      method: 'POST',
+      mode: mode,
+      headers: requestHeaders(token),
+      body: JSON.stringify(location)
+    }
+    return fetch(`${AppConfig.event_service_url}/event/api/v1/events/preferred/paged/data`, requestOptions)
   } else {
     return null
   }
