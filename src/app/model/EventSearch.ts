@@ -5,6 +5,7 @@ import {Category} from "./Category";
 export interface IEventSearch extends IBaseSearch {
   title: optional<string>,
   description: optional<string>,
+  active: boolean,
   start: optional<number>,
   stop: optional<number>,
   location: arrayOptional<Number>,
@@ -15,6 +16,7 @@ export interface IEventSearch extends IBaseSearch {
 export class EventSearch extends BaseSearch implements IEventSearch {
   title: optional<string>
   description: optional<string>
+  active: boolean
   start: optional<number>
   stop: optional<number>
   location: arrayOptional<Number>
@@ -24,7 +26,8 @@ export class EventSearch extends BaseSearch implements IEventSearch {
   constructor(createdBy: optional<string>, createdDate: optional<number>, id: optional<string>,
               modifiedBy: optional<string>, uuid: optional<string>, title: optional<string>,
               description: optional<string>, start: optional<number>, stop: optional<number>,
-              location: arrayOptional<Number>, range: optional<number>, eventCategories: arrayOptional<Category>) {
+              location: arrayOptional<Number>, range: optional<number>, eventCategories: arrayOptional<Category>,
+              active: boolean) {
 
     super(createdBy, createdDate, id, modifiedBy, uuid)
 
@@ -35,12 +38,13 @@ export class EventSearch extends BaseSearch implements IEventSearch {
     this.location = location
     this.range = range
     this.eventCategories = eventCategories
+    this.active = active
   }
 
 }
 
 export const eventSearch = (title: optional<string>, categories: arrayOptional<Category>,
-                            range: optional<number>, location: arrayOptional<Number>): EventSearch => {
+                            range: optional<number>, location: arrayOptional<Number>, active: boolean): EventSearch => {
   return new EventSearch(null,null,null,null,null,title,
-    null,null,null,location,range,categories)
+    null,null,null,location,range,categories,active)
 }

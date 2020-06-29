@@ -7,7 +7,7 @@ import { Tab, Tabs, TabList, TabPanel } from 'react-tabs'
 import 'react-tabs/style/react-tabs.css'
 import { connect } from 'react-redux'
 import { GeolocatedProps, geolocated } from "react-geolocated"
-import {fetchAllEvents, fetchAllRecommendedEvents, searchEvents} from "../services/EventService"
+import {fetchAllActiveEvents, fetchAllRecommendedEvents, searchEvents} from "../services/EventService"
 import { Page } from "../model/Page"
 import { EventWithCategory } from "../model/EventWithCategory"
 import {eventSearch, EventSearch} from "../model/EventSearch"
@@ -103,10 +103,12 @@ interface IHomeState {
   selectedCategories: Array<Category>,
   searchTitle: string,
   selectedRange: number,
+  searchActive: boolean,
   includeRange: boolean,
   timer: any | null,
   refreshOn: boolean,
-  recommendedTab: boolean
+  recommendedTab: boolean,
+  eventListTabIndex: number
 }
 
 class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
@@ -120,10 +122,12 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
       selectedCategories: [],
       searchTitle: "",
       selectedRange: 1,
+      searchActive: true,
       includeRange: false,
       timer: null,
       refreshOn: true,
-      recommendedTab: false
+      recommendedTab: false,
+      eventListTabIndex: 0
     }
     setTimeout(() => this.getEvents(), 250);
     setTimeout(() => this.getRecommendedEvents(), 250);
@@ -222,7 +226,7 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
 
   private getEvents(): void {
     if (Home.hasToken() && this.state.refreshOn) {
-      let eventPromise: Promise<Response> | null = fetchAllEvents()
+      let eventPromise: Promise<Response> | null = fetchAllActiveEvents()
       if (eventPromise != null) {
         eventPromise.then((response: Response) => this.updateEvents(response)).catch((reason: any) => {
           console.error("request error 3: " + JSON.stringify(reason))
@@ -247,7 +251,8 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
     if (Home.hasToken()) {
       const parsedCategories: arrayOptional<Category> = (categories && categories.length === 0) ? null : categories
       const search: EventSearch = (includeDistance) ?
-        eventSearch(title, parsedCategories, range, location) : eventSearch(title, parsedCategories, null, null)
+        eventSearch(title, parsedCategories, range, location, this.state.searchActive)
+        : eventSearch(title, parsedCategories, null, null, this.state.searchActive)
       let eventPromise: Promise<Response> | null = searchEvents(search)
       if (eventPromise != null) {
         eventPromise.then((response: Response) => this.updateEvents(response)).catch((reason: any) => {
@@ -287,7 +292,7 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
 
   private search(e: any): void {
     if (this.areEventsSearchable()) {
-      this.setState({...this.state, refreshOn: false, activePark: null})
+      this.setState({...this.state, refreshOn: false, activePark: null, eventListTabIndex: 0})
       this.searchEvents(this.state.searchTitle, this.state.selectedCategories,
         this.state.selectedRange, this.state.includeRange,
         (this.props.coords) ? new Array<Number>(this.props.coords.latitude, this.props.coords.longitude) : null)
@@ -295,7 +300,7 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
   }
 
   private eventTabSelected(index: number) {
-    this.setState({...this.state, recommendedTab: (index === 1)})
+    this.setState({...this.state, recommendedTab: (index === 1), eventListTabIndex: index})
   }
 
   private handleSearchInputChange(event): void {
@@ -346,25 +351,38 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
                             height={20} />
                   </span>
                 </div> : null}
+              <div className="locationBox">
+                <span className="distanceInput">
+                  <label>
+                    Active events only:
+                  </label>
+                </span>
+                <span>
+                   <Switch checked={this.state.searchActive}
+                           onChange={() => {this.setState({...this.state, searchActive: !this.state.searchActive})}}
+                           height={20} />
+                </span>
+              </div>
             </div>
           </div> : null}
           {Home.hasToken() ?
           <div className="item2-list">
-            <Tabs onSelect={(index: number) => this.eventTabSelected(index)}>
+            <Tabs selectedIndex={this.state.eventListTabIndex} onSelect={(index: number) => this.eventTabSelected(index)}>
               <TabList>
                 <Tab>All</Tab>
                 <Tab>Recommended</Tab>
               </TabList>
                 <TabPanel>
-                  {this.state.events.map(e => (
-                    <Item title={e.item.title}
-                          item={e.item}
-                          active={this.state.activePark}
-                          onClick={() => this.itemClick(e)}
-                          setRef={el => e.referance = el}
-                          key={e.item.id}
-                    />
-                  ))}
+                  {(this.state.events.length > 0) ?
+                    this.state.events.map(e => (
+                      <Item title={e.item.title}
+                            item={e.item}
+                            active={this.state.activePark}
+                            onClick={() => this.itemClick(e)}
+                            setRef={el => e.referance = el}
+                            key={e.item.id}
+                      />
+                  )) : <p>No active events found</p>}
                 </TabPanel>
                 <TabPanel>
                   {(this.state.recommended.length > 0) ?

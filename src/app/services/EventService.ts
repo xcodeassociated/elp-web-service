@@ -30,6 +30,21 @@ export const fetchAllEvents = (): Promise<Response> | null => {
   }
 }
 
+export const fetchAllActiveEvents = (): Promise<Response> | null => {
+  const token = getToken()
+  if (token) {
+    let mode: RequestMode = "cors"
+    const requestOptions = {
+      method: 'GET',
+      mode: mode,
+      headers: requestHeaders(token),
+    }
+    return fetch(`${AppConfig.event_service_url}/event/api/v1/events/active/paged/data`, requestOptions)
+  } else {
+    return null
+  }
+}
+
 export const fetchAllRecommendedEvents = (location: Location): Promise<Response> | null => {
   const token = getToken()
   if (token) {
