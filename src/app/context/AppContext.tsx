@@ -13,6 +13,7 @@ import NotFound from "../components/error/NotFound";
 import "../style/App.css";
 import "../style/AppRouter.css";
 import Settings from "../components/Settings";
+import UserHistory from "../components/UserHistory";
 
 type NamedProps = {
   data?: any
@@ -82,6 +83,13 @@ class AppContext extends Component<PropsAppRouter, IStateAppRouter> {
                       !this.isLoggedIn() ?
                         null :
                         <Nav.Item as="li">
+                          <NavLink className="nav-link" activeClassName="active" to="/history">History</NavLink>
+                        </Nav.Item>
+                    }
+                    {
+                      !this.isLoggedIn() ?
+                        null :
+                        <Nav.Item as="li">
                           <NavLink className="nav-link" activeClassName="active" to="/settings">Settings</NavLink>
                         </Nav.Item>
                     }
@@ -108,6 +116,7 @@ class AppContext extends Component<PropsAppRouter, IStateAppRouter> {
                     <Route exact path='/' component={Home}/>
                     <Route exact path='/home/:param?' component={HomeParam}/>
                     <Route exact path='/events' component={Events} />
+                    <Route exact path='/history' component={UserHistory}/>
                     <Route exact path='/settings' component={Settings}/>
                     <Route component={NotFound}/>
                   </Switch>

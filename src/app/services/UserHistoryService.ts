@@ -29,7 +29,7 @@ export const fetchUserHistory = (): optional<Promise<Response>> => {
       mode: mode,
       headers: requestHeaders(token),
     }
-    return fetch(`${AppConfig.event_service_url}/by/user/` + getUserSub(token)  + `/paged/data`, requestOptions)
+    return fetch(`${AppConfig.event_service_url}/event/api/v1/record/by/user/` + getUserSub(token)  + `/paged/data`, requestOptions)
   } else {
     return null
   }
