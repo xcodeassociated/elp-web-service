@@ -10,28 +10,58 @@
   padding-top: 15px;
   padding-bottom: 0px;
   background-color: lightblue;
-  display: grid;
   justify-content: left;
   align-content: center;
   font-size: 1.2em;
   font-weight: bold;
   color: white;
+  display: flex;
+  flex-direction: column;
+}
+
+.item-categoryBox {
+  display: flex;
+  overflow-x: auto;
+}
+
+.item-categoryBox > .item-category {
+  cursor: pointer;
+  margin-bottom: 5px;
+  margin-left: 5px;
+  display: grid;
+  justify-content: left;
+  align-content: center;
+  font-size: 0.9em;
+  color: lightslategray;
 }
 
 .active {
   background-color: lightgreen;
 }
 
-.photo {
+.item-info {
+  display: flex;
+}
+
+.item-info > .item-photo {
   height: 30px;
   width: 30px;
   margin: 5px;
+  flex: 1;
 }
 
 .inline {
-  display: inline;
   vertical-align: middle;
   margin: 10px 10px 10px;
+}
+
+.item-info > .item-title {
+  flex: 8;
+}
+
+.item-info > .item-button {
+  justify-content: flex-end;
+  flex: 1;
 }
 
 .categoryBox {

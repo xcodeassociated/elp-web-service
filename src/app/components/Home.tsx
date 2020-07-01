@@ -55,12 +55,18 @@ class Item extends Component<IItemProps> {
     return (
       <div className={(this.props.active && this.props.item.id === this.props.active.id) ? 'item active' : 'item'}
            onClick={() => this.active()}>
-        <p ref={this.props.setRef}>
-                    <span className="inline">
-                        <img src='/location-item.svg' className="photo" />
-                    </span>
-          <span className="inline">{this.props.title}</span>
-        </p>
+        <div ref={this.props.setRef} className="item-info">
+          <img src='/location-item.svg' className="inline item-photo" />
+          <div className="inline item-title">{this.props.title}</div>
+          <div className="inline item-button"><button>Join</button></div>
+        </div>
+        <div className="item-categoryBox">
+          {this.props.item.categories.map((e: Category) => (
+            <span className="item-category">
+              {e.title}
+            </span>
+          ))}
+        </div>
       </div>
     )
   }
