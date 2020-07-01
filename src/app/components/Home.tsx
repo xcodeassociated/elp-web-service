@@ -17,6 +17,7 @@ import {Location} from "../model/Location"
 import {arrayOptional, optional} from "../model/Types"
 import NumericInput from 'react-numeric-input'
 import Switch from "react-switch"
+import {deregister, register} from "../services/UserHistoryService";
 
 export const icon = new Icon({
   iconUrl: "/location.svg",
@@ -35,6 +36,7 @@ interface EventWrapper {
 
 interface IItemProps {
   onClick: Function,
+  reload: Function,
   item: EventWithCategory,
   active: EventWithCategory | null,
   setRef: any,
@@ -51,18 +53,47 @@ class Item extends Component<IItemProps> {
     this.props.onClick()
   }
 
+  private join(): void {
+    const apiPromise: optional<Promise<Response>> = register(this.props.item.id)
+    if (apiPromise) {
+      apiPromise.then((response: Response) => {
+        if (response.ok) {
+          this.props.reload()
+        }
+      }).catch((e: any) => console.error(e))
+    }
+  }
+
+  private leave(): void {
+    const apiPromise: optional<Promise<Response>> = deregister(this.props.item.id)
+    if (apiPromise) {
+      apiPromise.then((response: Response) => {
+        if (response.ok) {
+          this.props.reload()
+        }
+      }).catch((e: any) => console.error(e))
+    }
+  }
+
   public render() {
     return (
       <div className={(this.props.active && this.props.item.id === this.props.active.id) ? 'item active' : 'item'}
            onClick={() => this.active()}>
         <div ref={this.props.setRef} className="item-info">
           <img src='/location-item.svg' className="inline item-photo" />
-          <div className="inline item-title">{this.props.title}</div>
-          <div className="inline item-button"><button>Join</button></div>
+          <div className="inline item-title">
+            {this.props.title}
+          </div>
+          <div className="inline item-button">
+            {(this.props.item.registered) ?
+              <button onClick={this.leave.bind(this)}>Leave</button>
+              :
+              <button onClick={this.join.bind(this)}>Join</button>}
+          </div>
         </div>
         <div className="item-categoryBox">
           {this.props.item.categories.map((e: Category) => (
-            <span className="item-category">
+            <span key={e.id} className="item-category">
               {e.title}
             </span>
           ))}
@@ -387,6 +418,7 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
                             item={e.item}
                             active={this.state.activePark}
                             onClick={() => this.itemClick(e)}
+                            reload={() => this.getEvents()}
                             setRef={el => e.referance = el}
                             key={e.item.id}
                       />
@@ -399,6 +431,7 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
                             item={e.item}
                             active={this.state.activePark}
                             onClick={() => this.itemClick(e)}
+                            reload={() => this.getEvents()}
                             setRef={el => e.referance = el}
                             key={e.item.id}
                       />
