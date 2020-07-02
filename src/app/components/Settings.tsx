@@ -8,8 +8,20 @@ import {fetchAllCategories} from "../services/CategoryService";
 import {UserData} from "../model/UserData";
 import {fetchUserData, saveUserData} from "../services/UserDataService";
 import {UserDataCommand} from "../model/UserDataCommand";
+import {UserAccountContactData} from "../model/UserAccountContactData";
+import {optional} from "../model/Types";
+import {fetchUserAccountData, updateUserAccountData} from "../services/UserAccountService";
+import {UserAccountData} from "../model/UserAccountData";
+import {UserAccountDataCommand} from "../model/UserAccountDataCommand";
 
 interface ISettingsState {
+  firstName: optional<string>,
+  lastName: optional<string>,
+  authId: string,
+  username: string,
+  createdTimestamp: number,
+  enabled: boolean,
+  contacts: Array<UserAccountContactData>,
   maxDistance: number
   preferredCategories: Array<Category>,
   categories: Array<Category>,
@@ -25,6 +37,13 @@ class Settings extends Component<ISettingsProps, ISettingsState> {
   constructor(props: Readonly<ISettingsProps>) {
     super(props);
     this.state = {
+      firstName: null,
+      lastName: null,
+      authId: '',
+      username: '',
+      createdTimestamp: 0,
+      enabled: true,
+      contacts: [],
       maxDistance: 0,
       preferredCategories: [],
       categories: [],
@@ -52,6 +71,19 @@ class Settings extends Component<ISettingsProps, ISettingsState> {
   }
 
   private fetchAndUpdateUserData(): void {
+    this.getUserAccountData()
+      .then((data: UserAccountData) => this.setState({
+        ...this.state,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        authId: data.authId,
+        username: data.username,
+        createdTimestamp: data.createdTimestamp,
+        enabled: data.enabled,
+        contacts: data.contacts,
+      }))
+      .catch((error: Error) => console.error(error))
+
     this.getUserData()
       .then((data: UserData) => this.setState({
         ...this.state,
@@ -71,7 +103,17 @@ class Settings extends Component<ISettingsProps, ISettingsState> {
     }
   }
 
-  private async updateUserData(userData: UserDataCommand ): Promise<UserData> {
+  private async getUserAccountData(): Promise<UserAccountData> {
+    const response: Response | null = await fetchUserAccountData()
+    if (response && response.ok) {
+      const data: string = await response.text()
+      return JSON.parse(data)
+    } else {
+      throw new Error("Could not fetch categories")
+    }
+  }
+
+  private async updateUserData(userData: UserDataCommand): Promise<UserData> {
     const response: Response | null = await saveUserData(userData)
     if (response && response.ok) {
       const data: string = await response.text()
@@ -81,17 +123,36 @@ class Settings extends Component<ISettingsProps, ISettingsState> {
     }
   }
 
+  private async updateUserAccountData(userAccountData: UserAccountDataCommand): Promise<boolean> {
+    const response: Response | null = await updateUserAccountData(userAccountData)
+    if (response && response.ok) {
+      return true
+    } else {
+      throw new Error("Could not fetch categories")
+    }
+  }
+
   private onCreateOrUpdateSubmit(e: any): void {
     e.preventDefault()
-    const userData: UserDataCommand = new UserDataCommand(this.state.maxDistance,
-      this.state.preferredCategories.map((e: Category) => e.id))
-      this.updateUserData(userData).then((data: UserData) => this.setState({
-        ...this.state,
-        maxDistance: data.maxDistance,
-        preferredCategories: data.preferredCategories,
-        redirect: true
-      }))
+    const userAccountData: UserAccountDataCommand = new UserAccountDataCommand(this.state.username,
+      (this.state.firstName && this.state.firstName.length > 0) ? this.state.firstName : null,
+      (this.state.lastName && this.state.lastName.length > 0) ? this.state.lastName : null, null)
+    this.updateUserAccountData(userAccountData).then((result: boolean) => {
+      if (result) {
+        this.setState({...this.state, redirect: true})
+      }
+    })
       .catch((error: Error) => alert("Sorry, the data could not be saved"))
+
+    const userData: UserDataCommand = new UserDataCommand(this.state.maxDistance,
+    this.state.preferredCategories.map((e: Category) => e.id))
+    this.updateUserData(userData).then((data: UserData) => this.setState({
+      ...this.state,
+      maxDistance: data.maxDistance,
+      preferredCategories: data.preferredCategories,
+      redirect: true
+    }))
+    .catch((error: Error) => alert("Sorry, the data could not be saved"))
   }
 
   private onResetSubmit(e: any): void {
@@ -105,7 +166,7 @@ class Settings extends Component<ISettingsProps, ISettingsState> {
         <Redirect to='/'/>
       )
     } else {
-      let {maxDistance, preferredCategories, categories} = this.state
+      let {firstName, lastName, createdTimestamp, authId, contacts, maxDistance, preferredCategories, categories} = this.state
       return (
         <div id="reservations-list">
           <div id="event-create-form">
@@ -115,6 +176,36 @@ class Settings extends Component<ISettingsProps, ISettingsState> {
                   <td className="reservations-list-table-header-create-event">
                     <form name="eventCreateForm" onSubmit={this.onCreateOrUpdateSubmit.bind(this)}>
                       <div className="form-group-collection">
+                        <div className="form-group">
+                          <div className="form-group">
+                            <label className="location-label">Auth Id:</label>
+                            <input type="text" className="location-input" name="title"
+                                   disabled={true}
+                                   value={authId}/>
+                          </div>
+                          <label className="location-label">First Name:</label>
+                          <input type="text" className="location-input" name="title"
+                                 onChange={e => this.setState({...this.state, firstName: e.target.value})}
+                                 value={(firstName) ? firstName : ''}/>
+                        </div>
+                        <div className="form-group">
+                          <label className="location-label">Last Name:</label>
+                          <input type="text" className="location-input" name="title"
+                                 onChange={e => this.setState({...this.state, lastName: e.target.value})}
+                                 value={(lastName) ? lastName : ''}/>
+                        </div>
+                        <div className="form-group">
+                          <label className="location-label">Created Date:</label>
+                          <input type="text" className="location-input" name="title"
+                                 disabled={true}
+                                 value={createdTimestamp}/>
+                        </div>
+                        <div className="form-group">
+                          <label className="location-label">Email(s):</label>
+                          <input type="text" className="location-input" name="title"
+                                 disabled={true}
+                                 value={contacts.map((e: UserAccountContactData) => e.email)}/>
+                        </div>
                         <div className="form-group">
                           <label className="location-label">Max distance:</label>
                           <input type="text" className="location-input" name="title"
