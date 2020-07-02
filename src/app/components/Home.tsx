@@ -92,7 +92,8 @@ class Item extends Component<IItemProps> {
             {(this.props.item.registered) ?
               <button onClick={this.leave.bind(this)}>Leave</button>
               :
-              <button onClick={this.join.bind(this)}>Join</button>}
+              (this.props.item.stop && this.props.item.stop >= Date.now())
+                ? <button onClick={this.join.bind(this)}>Join</button> : null}
           </div>
         </div>
         <div className="item-categoryBox">
