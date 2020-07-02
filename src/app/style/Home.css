@@ -90,23 +90,49 @@
   background-color: lightgreen;
 }
 
+.spotBoxWrapper {
+  padding-top: 2%;
+  padding-left: 2%;
+}
+
+.spotBox {
+  display: flex;
+}
+
+.spotBox > .spotSelectSection {
+  flex: 18;
+  padding-right: 1%;
+}
+
+.spotBox > .spotButtonSection {
+  flex: 2;
+}
+
+.spotButtonSection > .spotButton {
+  height: 35px;
+}
+
 .searchBox {
   padding: 10px;
 }
 
-.searchBox > .searchInput {
-  width: 65%;
+.searchBox > .searchBoxInputSection {
+  display: flex;
+}
+
+.searchBoxInputSection > .searchInput {
+  flex: 16;
   height: 25px;
   margin-right: 1%;
 }
 
-.searchBox > .searchButton {
-  width: 16%;
+.searchBoxInputSection > .searchButton {
+  flex: 2;
   height: 25px;
 }
 
-.searchBox > .clearButton {
-  width: 16%;
+.searchBoxInputSection > .clearButton {
+  flex: 2;
   height: 25px;
 }
 
@@ -117,17 +143,34 @@
 }
 
 .locationBox > .distanceInput {
-  width: 90%;
+  display: flex;
   height: 25px;
   margin-right: 1%;
   vertical-align: middle;
 }
 
-.locationBox > .locationInclude {
-  width: 10%;
+.distanceInput > .locationInfo {
+  flex: 4;
+}
+
+.distanceInput > .distanceInput {
+  flex: 8;
+}
+
+.distanceInput > .locationInclude {
+  padding-left: 3%;
   height: 25px;
   vertical-align: middle;
 }
+
+.distanceInput > .activeOnlyLabel {
+  flex: 4;
+}
+
+.distanceInput > .activeOnlySwitch {
+  flex: 17;
+}
+
 
 .login-hint {
   color: darkred;
