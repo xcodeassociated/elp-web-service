@@ -49,8 +49,8 @@ class Settings extends Component<ISettingsProps, ISettingsState> {
       categories: [],
       redirect: false
     }
-    setTimeout(() => this.fetchAndUpdateCategories(), 250);
-    setTimeout(() => this.fetchAndUpdateUserData(), 250);
+    setTimeout(() => this.fetchAndUpdateCategories(), 250)
+    setTimeout(() => this.fetchAndUpdateUserData(), 250)
   }
 
   private fetchAndUpdateCategories(): void {
@@ -60,7 +60,7 @@ class Settings extends Component<ISettingsProps, ISettingsState> {
   }
 
   private async getCategories(): Promise<Array<Category>> {
-    const response: Response | null = await fetchAllCategories()
+    const response: optional<Response> = await fetchAllCategories()
     if (response && response.ok) {
       const data: string = await response.text()
       const categories: Array<Category>= JSON.parse(data)
@@ -94,7 +94,7 @@ class Settings extends Component<ISettingsProps, ISettingsState> {
   }
 
   private async getUserData(): Promise<UserData> {
-    const response: Response | null = await fetchUserData()
+    const response: optional<Response> = await fetchUserData()
     if (response && response.ok) {
       const data: string = await response.text()
       return JSON.parse(data)
@@ -104,7 +104,7 @@ class Settings extends Component<ISettingsProps, ISettingsState> {
   }
 
   private async getUserAccountData(): Promise<UserAccountData> {
-    const response: Response | null = await fetchUserAccountData()
+    const response: optional<Response> = await fetchUserAccountData()
     if (response && response.ok) {
       const data: string = await response.text()
       return JSON.parse(data)
@@ -114,7 +114,7 @@ class Settings extends Component<ISettingsProps, ISettingsState> {
   }
 
   private async updateUserData(userData: UserDataCommand): Promise<UserData> {
-    const response: Response | null = await saveUserData(userData)
+    const response: optional<Response> = await saveUserData(userData)
     if (response && response.ok) {
       const data: string = await response.text()
       return JSON.parse(data)
@@ -124,7 +124,7 @@ class Settings extends Component<ISettingsProps, ISettingsState> {
   }
 
   private async updateUserAccountData(userAccountData: UserAccountDataCommand): Promise<boolean> {
-    const response: Response | null = await updateUserAccountData(userAccountData)
+    const response: optional<Response> = await updateUserAccountData(userAccountData)
     if (response && response.ok) {
       return true
     } else {
@@ -173,7 +173,7 @@ class Settings extends Component<ISettingsProps, ISettingsState> {
             <MDBTable>
               <MDBTableBody>
                 <tr>
-                  <td className="reservations-list-table-header-create-event">
+                  <td className="events-list-table-header-create-event">
                     <form name="eventCreateForm" onSubmit={this.onCreateOrUpdateSubmit.bind(this)}>
                       <div className="form-group-collection">
                         <div className="form-group">

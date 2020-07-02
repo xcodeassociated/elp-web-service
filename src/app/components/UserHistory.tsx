@@ -1,7 +1,6 @@
 import React, {Component} from 'react'
 import {Redirect} from "react-router-dom"
 import {connect} from 'react-redux'
-import '../style/Reservations.css'
 import {MDBTable, MDBTableBody, MDBTableHead} from 'mdbreact'
 import {EventWithCategory} from "../model/EventWithCategory"
 import { Page } from "../model/Page"
@@ -10,6 +9,7 @@ import {Category} from "../model/Category";
 import {deregister, fetchUserHistory} from "../services/UserHistoryService";
 import {optional} from "../model/Types";
 import {UserEvent} from "../model/UserEvent";
+import {hasToken} from "../services/TokenService";
 
 type Error = {
   code: number,
@@ -37,10 +37,6 @@ class Events extends Component<IProp, IState> {
       eventDeleteId: "",
       dispatch: () => {}
     }
-  }
-
-  private static hasToken(): boolean {
-    return localStorage.getItem('token') != null
   }
 
   private onDeleteSubmit(id: string): void {
@@ -115,38 +111,41 @@ class Events extends Component<IProp, IState> {
         <Redirect to='/' />
       )
     } else {
-      if (Events.hasToken() && this.state.error === undefined) {
+      if (hasToken() && this.state.error === undefined) {
         return (
           <div id="reservations-list">
             <MDBTable>
               <MDBTableHead>
-                <tr className="reservations-list-table-header">
-                  <th className="reservations-list-table-header-id">ID</th>
-                  <th className="reservations-list-table-header-title">Title</th>
-                  <th className="reservations-list-table-header-description">Description</th>
-                  <th className="reservations-list-table-header-category">Category</th>
-                  <th className="reservations-list-table-header-start">Start</th>
-                  <th className="reservations-list-table-header-stop">Stop</th>
-                  <th className="reservations-list-table-header-coordinate">Latitude</th>
-                  <th className="reservations-list-table-header-coordinate">Longitude</th>
+                <tr className="events-list-table-header">
+                  <th className="events-list-table-header-id">ID</th>
+                  <th className="events-list-table-header-title">Title</th>
+                  <th className="events-list-table-header-description">Description</th>
+                  <th className="events-list-table-header-category">Category</th>
+                  <th className="events-list-table-header-start">Start</th>
+                  <th className="events-list-table-header-stop">Stop</th>
+                  <th className="events-list-table-header-coordinate">Latitude</th>
+                  <th className="events-list-table-header-coordinate">Longitude</th>
                 </tr>
               </MDBTableHead>
               <MDBTableBody>
                 {this.state.events !== undefined ?
                   this.state.events
-                    .map((reservation: EventWithCategory, index: number) =>
+                    .map((event: EventWithCategory, index: number) =>
                       <tr key={index} className="reservation-item">
-                        <td>{reservation.id}</td>
-                        <td>{reservation.title}</td>
-                        <td>{reservation.description}</td>
-                        <td>{(reservation.categories) ? reservation.categories.map((e: Category) => e.title + " ") : ''}</td>
-                        <td>{reservation.start}</td>
-                        <td>{reservation.stop}</td>
-                        <td>{reservation.location[0]}</td>
-                        <td>{reservation.location[1]}</td>
+                        <td>{event.id}</td>
+                        <td>{event.title}</td>
+                        <td>{event.description}</td>
+                        <td>{(event.categories) ? event.categories.map((e: Category) => e.title + " ") : ''}</td>
+                        <td>{event.start}</td>
+                        <td>{event.stop}</td>
+                        <td>{event.location[0]}</td>
+                        <td>{event.location[1]}</td>
                         <td>
-                          <button className="btn btn-danger"
-                                  onClick={() => this.onDeleteSubmit(reservation.id)}>Leave</button>
+                          {(event.stop && event.stop >= Date.now()) ?
+                            <button className="btn btn-danger"
+                                    onClick={() => this.onDeleteSubmit(event.id)}>Leave</button>
+                            : null
+                          }
                         </td>
                       </tr>)
                   : null

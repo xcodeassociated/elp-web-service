@@ -14,6 +14,7 @@ import "../style/App.css";
 import "../style/AppRouter.css";
 import Settings from "../components/Settings";
 import UserHistory from "../components/UserHistory";
+import {hasToken} from "../services/TokenService";
 
 type NamedProps = {
   data?: any
@@ -34,10 +35,6 @@ class AppContext extends Component<PropsAppRouter, IStateAppRouter> {
     this.state = {}
 
     this.props.dispatch(redirectHomeAction(true))
-  }
-
-  private isLoggedIn(): boolean {
-    return localStorage.getItem('token') != null
   }
 
   private onKeycloakEvent = (event: KeycloakEvent, error?: KeycloakError): void => {
@@ -73,28 +70,28 @@ class AppContext extends Component<PropsAppRouter, IStateAppRouter> {
                       <NavLink className="nav-link" activeClassName="active" to="/" exact>Home</NavLink>
                     </Nav.Item>
                     {
-                      !this.isLoggedIn() ?
+                      !hasToken() ?
                         null :
                         <Nav.Item as="li">
                           <NavLink className="nav-link" activeClassName="active" to="/events">Events</NavLink>
                         </Nav.Item>
                     }
                     {
-                      !this.isLoggedIn() ?
+                      !hasToken() ?
                         null :
                         <Nav.Item as="li">
                           <NavLink className="nav-link" activeClassName="active" to="/history">History</NavLink>
                         </Nav.Item>
                     }
                     {
-                      !this.isLoggedIn() ?
+                      !hasToken() ?
                         null :
                         <Nav.Item as="li">
                           <NavLink className="nav-link" activeClassName="active" to="/settings">Settings</NavLink>
                         </Nav.Item>
                     }
                     {
-                      this.isLoggedIn() ?
+                      hasToken() ?
                         <button type="button" onClick={() => {
                           keycloak.logout()
                           this.props.dispatch(redirectHomeAction(true))

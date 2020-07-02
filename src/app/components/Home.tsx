@@ -18,6 +18,7 @@ import {arrayOptional, optional} from "../model/Types"
 import NumericInput from 'react-numeric-input'
 import Switch from "react-switch"
 import {deregister, register} from "../services/UserHistoryService";
+import {hasToken} from "../services/TokenService";
 
 export const icon = new Icon({
   iconUrl: "/location.svg",
@@ -31,14 +32,14 @@ export const userIcon = new Icon({
 
 interface EventWrapper {
   item: EventWithCategory,
-  referance: any | null
+  referance: optional<any>
 }
 
 interface IItemProps {
   onClick: Function,
   reload: Function,
   item: EventWithCategory,
-  active: EventWithCategory | null,
+  active: optional<EventWithCategory>,
   setRef: any,
   title: String
 }
@@ -136,13 +137,13 @@ interface IHomeState {
   events: Array<EventWrapper>,
   recommended: Array<EventWrapper>,
   categories: Array<Category>,
-  activePark: EventWithCategory | null,
+  activePark: optional<EventWithCategory>,
   selectedCategories: Array<Category>,
   searchTitle: string,
   selectedRange: number,
   searchActive: boolean,
   includeRange: boolean,
-  timer: any | null,
+  timer: optional<any>,
   refreshOn: boolean,
   recommendedTab: boolean,
   eventListTabIndex: number
@@ -190,7 +191,7 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
   }
 
   private async getCategories(): Promise<Array<Category>> {
-    const response: Response | null = await fetchAllCategories()
+    const response: optional<Response> = await fetchAllCategories()
     if (response && response.ok) {
       const data: string = await response.text()
       const categories: Array<Category> = JSON.parse(data)
@@ -204,10 +205,6 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
     let timer = setInterval(() =>
       (this.state.recommendedTab) ? this.getRecommendedEvents() : this.getEvents(), 10000)
     this.setState({...this.state, timer: timer})
-  }
-
-  private static hasToken(): boolean {
-    return localStorage.getItem('token') != null
   }
 
   private updateEvents(response: Response): void {
@@ -262,8 +259,8 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
   }
 
   private getEvents(): void {
-    if (Home.hasToken() && this.state.refreshOn) {
-      let eventPromise: Promise<Response> | null = fetchAllActiveEvents()
+    if (hasToken() && this.state.refreshOn) {
+      let eventPromise: optional<Promise<Response>> = fetchAllActiveEvents()
       if (eventPromise != null) {
         eventPromise.then((response: Response) => this.updateEvents(response)).catch((reason: any) => {
           console.error("request error 3: " + JSON.stringify(reason))
@@ -273,8 +270,8 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
   }
 
   private getRecommendedEvents(): void {
-    if (Home.hasToken() && this.state.refreshOn && this.props.coords) {
-      let eventPromise: Promise<Response> | null =
+    if (hasToken() && this.state.refreshOn && this.props.coords) {
+      let eventPromise: optional<Promise<Response>> =
         fetchAllRecommendedEvents(new Location([this.props.coords.latitude, this.props.coords.longitude]))
       if (eventPromise != null) {
         eventPromise.then((response: Response) => this.updateRecommendedEvents(response))
@@ -285,12 +282,12 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
 
   private searchEvents(title: optional<string>, categories: arrayOptional<Category>,
                        range: optional<number>, includeDistance: boolean, location: arrayOptional<Number>): void {
-    if (Home.hasToken()) {
+    if (hasToken()) {
       const parsedCategories: arrayOptional<Category> = (categories && categories.length === 0) ? null : categories
       const search: EventSearch = (includeDistance) ?
         eventSearch(title, parsedCategories, range, location, this.state.searchActive)
         : eventSearch(title, parsedCategories, null, null, this.state.searchActive)
-      let eventPromise: Promise<Response> | null = searchEvents(search)
+      let eventPromise: optional<Promise<Response>> = searchEvents(search)
       if (eventPromise != null) {
         eventPromise.then((response: Response) => {
           this.updateEvents(response)
@@ -355,7 +352,7 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
     return (
       <div className="grid-container">
         <div className="item2">
-          {Home.hasToken() ?
+          {hasToken() ?
             <div className="item2-panel">
               <div className="categoryLabel">
                 <label>Event categories:</label>
@@ -404,7 +401,7 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
               </div>
             </div>
           </div> : null}
-          {Home.hasToken() ?
+          {hasToken() ?
           <div className="item2-list">
             <Tabs selectedIndex={this.state.eventListTabIndex} onSelect={(index: number) => this.eventTabSelected(index)}>
               <TabList>

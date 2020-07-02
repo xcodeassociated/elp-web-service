@@ -1,9 +1,7 @@
 import {AppConfig} from "../config/AppConfig"
 import {CategoryCommand} from "../model/CategoryCommand"
-
-const getToken = (): string | null => {
-  return localStorage.getItem('token')
-}
+import {getToken} from "./TokenService";
+import {optional} from "../model/Types";
 
 const requestHeaders = (token: string) => [
   ['Content-Type', 'application/json'],
@@ -13,7 +11,7 @@ const requestHeaders = (token: string) => [
   ['Authorization', `Bearer ${token}`]
 ]
 
-export const fetchAllCategories = (): Promise<Response> | null => {
+export const fetchAllCategories = (): optional<Promise<Response>> => {
   const token = getToken()
   if (token) {
     let mode: RequestMode = "cors"
@@ -28,7 +26,7 @@ export const fetchAllCategories = (): Promise<Response> | null => {
   }
 }
 
-export const saveCategory = (event: CategoryCommand): Promise<Response> | null => {
+export const saveCategory = (event: CategoryCommand): optional<Promise<Response>> => {
   const token = getToken()
   if (token) {
     let mode: RequestMode = "cors"
@@ -45,7 +43,7 @@ export const saveCategory = (event: CategoryCommand): Promise<Response> | null =
   }
 }
 
-export const deleteCategory = (id: String): Promise<Response> | null  => {
+export const deleteCategory = (id: String): optional<Promise<Response>>  => {
   const token = getToken()
   if (token) {
     let mode: RequestMode = "cors"

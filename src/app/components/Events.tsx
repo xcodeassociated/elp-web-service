@@ -1,15 +1,17 @@
 import React, {Component} from 'react'
 import {Redirect} from "react-router-dom"
 import {connect} from 'react-redux'
-import '../style/Reservations.css'
+import '../style/Events.css'
 import {MDBTable, MDBTableBody, MDBTableHead} from 'mdbreact'
 import {EventWithCategory} from "../model/EventWithCategory"
 import {Event} from "../model/Event"
 import { Page } from "../model/Page"
-import {fetchAllEvents, createEvent, deleteEvent, updateEvent} from '../services/EventService'
+import {createEvent, deleteEvent, updateEvent, fetchAllUserEvents} from '../services/EventService'
 import "../style/Event.css"
 import {EventCommand} from "../model/EventCommand"
 import {Category} from "../model/Category";
+import {hasToken} from "../services/TokenService";
+import {optional} from "../model/Types";
 
 type Error = {
   code: number,
@@ -55,10 +57,6 @@ class Events extends Component<IProp, IState> {
     }
 
     this.onCreateOrUpdateSubmit = this.onCreateOrUpdateSubmit.bind(this)
-  }
-
-  private static hasToken(): boolean {
-    return localStorage.getItem('token') != null
   }
 
   private onCreateOrUpdateSubmit(e: any): void {
@@ -154,7 +152,7 @@ class Events extends Component<IProp, IState> {
       }
     }
 
-    let eventPromise: Promise<Response> | null = fetchAllEvents()
+    let eventPromise: optional<Promise<Response>> = fetchAllUserEvents()
     if (eventPromise != null) {
       eventPromise.then(onFetchEvents)
     }
@@ -166,7 +164,7 @@ class Events extends Component<IProp, IState> {
 
   private create(event: EventCommand): void {
     if (event) {
-      let eventPromise: Promise<Response> | null = createEvent(event)
+      let eventPromise: optional<Promise<Response>> = createEvent(event)
       if (eventPromise != null) {
         eventPromise.then((response: Response) => {
           if (response.ok) {
@@ -191,7 +189,7 @@ class Events extends Component<IProp, IState> {
 
   private update(event: EventCommand): void {
     if (event) {
-      let eventPromise: Promise<Response> | null = updateEvent(event)
+      let eventPromise: optional<Promise<Response>> = updateEvent(event)
       if (eventPromise != null) {
         eventPromise.then((response: Response) => {
           if (response.ok) {
@@ -212,7 +210,7 @@ class Events extends Component<IProp, IState> {
   }
 
   private delete(id: string): void {
-    let eventPromise: Promise<Response> | null = deleteEvent(id)
+    let eventPromise: optional<Promise<Response>> = deleteEvent(id)
     if (eventPromise != null) {
       eventPromise.then((response: Response) => {
         if (response.ok) {
@@ -242,16 +240,16 @@ class Events extends Component<IProp, IState> {
         <Redirect to='/' />
       )
     } else {
-      if (Events.hasToken() && this.state.error === undefined) {
+      if (hasToken() && this.state.error === undefined) {
         let {eventCreateTitle, eventCreateDescription, eventCreateLatitude, eventCreateLongitude,
           eventCreateStart, eventCreateStop, eventCreateCategories} = this.state
         return (
-          <div id="reservations-list">
+          <div id="events-list">
             <div id="event-create-form">
               <MDBTable>
                 <MDBTableBody>
                   <tr>
-                    <td className="reservations-list-table-header-create-event">
+                    <td className="events-list-table-header-create-event">
                       <form name="eventCreateForm" onSubmit={this.onCreateOrUpdateSubmit}>
                         <div className="form-group-collection">
                           <div className="form-group">
@@ -313,36 +311,40 @@ class Events extends Component<IProp, IState> {
             <MDBTable>
               <MDBTableHead>
                 <tr className="reservations-list-table-header">
-                  <th className="reservations-list-table-header-id">ID</th>
-                  <th className="reservations-list-table-header-title">Title</th>
-                  <th className="reservations-list-table-header-description">Description</th>
-                  <th className="reservations-list-table-header-category">Category</th>
-                  <th className="reservations-list-table-header-start">Start</th>
-                  <th className="reservations-list-table-header-stop">Stop</th>
-                  <th className="reservations-list-table-header-coordinate">Latitude</th>
-                  <th className="reservations-list-table-header-coordinate">Longitude</th>
+                  <th className="events-list-table-header-id">ID</th>
+                  <th className="events-list-table-header-title">Title</th>
+                  <th className="events-list-table-header-description">Description</th>
+                  <th className="events-list-table-header-category">Category</th>
+                  <th className="events-list-table-header-start">Start</th>
+                  <th className="events-list-table-header-stop">Stop</th>
+                  <th className="events-list-table-header-coordinate">Latitude</th>
+                  <th className="events-list-table-header-coordinate">Longitude</th>
                 </tr>
               </MDBTableHead>
               <MDBTableBody>
                 {this.state.events !== undefined ?
                   this.state.events
-                    .map((reservation: EventWithCategory, index: number) =>
+                    .map((event: EventWithCategory, index: number) =>
                       <tr key={index} className="reservation-item">
-                        <td>{reservation.id}</td>
-                        <td>{reservation.title}</td>
-                        <td>{reservation.description}</td>
-                        <td>{(reservation.categories) ? reservation.categories.map((e: Category) => e.title + " ") : ''}</td>
-                        <td>{reservation.start}</td>
-                        <td>{reservation.stop}</td>
-                        <td>{reservation.location[0]}</td>
-                        <td>{reservation.location[1]}</td>
+                        <td>{event.id}</td>
+                        <td>{event.title}</td>
+                        <td>{event.description}</td>
+                        <td>{(event.categories) ? event.categories.map((e: Category) => e.title + " ") : ''}</td>
+                        <td>{event.start}</td>
+                        <td>{event.stop}</td>
+                        <td>{event.location[0]}</td>
+                        <td>{event.location[1]}</td>
                         <td>
-                          <button className="btn btn-primary"
-                                  onClick={() => this.onUpdateSubmit(reservation.id, reservation.title,
-                                    reservation.description, reservation.start, reservation.stop,
-                                    reservation.location, reservation.categories.map((e: Category) => e.id))}>Update Event</button>
-                          <button className="btn btn-danger"
-                                  onClick={() => this.onDeleteSubmit(reservation.id)}>Delete Event</button>
+                          {(event.stop && event.stop >= Date.now()) ?
+                            <span>
+                              <button className="btn btn-primary"
+                                      onClick={() => this.onUpdateSubmit(event.id, event.title,
+                                        event.description, event.start, event.stop,
+                                        event.location, event.categories.map((e: Category) => e.id))}>Update Event</button>
+                              <button className="btn btn-danger"
+                              onClick={() => this.onDeleteSubmit(event.id)}>Delete Event</button>
+                            </span> : null
+                          }
                         </td>
                       </tr>)
                   : null

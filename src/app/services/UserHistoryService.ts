@@ -1,16 +1,7 @@
 import {AppConfig} from "../config/AppConfig"
 import {UserEventCommand} from "../model/UserEventCommand";
 import {optional} from "../model/Types";
-
-const getToken = (): optional<string> => {
-  return localStorage.getItem('token')
-}
-
-const getUserSub = (token: string): string | null => {
-  let jwtDecode: any = require('jwt-decode')
-  const data: object = jwtDecode(token)
-  return data["sub"]
-}
+import {getToken, getUserSub} from "./TokenService";
 
 const requestHeaders = (token: string) => [
   ['Content-Type', 'application/json'],

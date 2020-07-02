@@ -1,9 +1,6 @@
 import {AppConfig} from "../config/AppConfig"
 import {UserDataCommand} from "../model/UserDataCommand";
-
-const getToken = (): string | null => {
-  return localStorage.getItem('token')
-}
+import {getToken} from "./TokenService";
 
 const requestHeaders = (token: string) => [
   ['Content-Type', 'application/json'],

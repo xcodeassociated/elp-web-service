@@ -2,10 +2,8 @@ import {AppConfig} from "../config/AppConfig"
 import {EventCommand} from "../model/EventCommand"
 import {EventSearch} from "../model/EventSearch"
 import {Location} from "../model/Location"
-
-const getToken = (): string | null => {
-  return localStorage.getItem('token')
-}
+import {getToken, getUserSub} from "./TokenService";
+import {optional} from "../model/Types";
 
 const requestHeaders = (token: string) => [
   ['Content-Type', 'application/json'],
@@ -15,7 +13,8 @@ const requestHeaders = (token: string) => [
   ['Authorization', `Bearer ${token}`]
 ]
 
-export const fetchAllEvents = (): Promise<Response> | null => {
+// todo: remove if not needed
+export const fetchAllEvents = (): optional<Promise<Response>> => {
   const token = getToken()
   if (token) {
     let mode: RequestMode = "cors"
@@ -30,7 +29,22 @@ export const fetchAllEvents = (): Promise<Response> | null => {
   }
 }
 
-export const fetchAllActiveEvents = (): Promise<Response> | null => {
+export const fetchAllUserEvents = (): optional<Promise<Response>> => {
+  const token = getToken()
+  if (token) {
+    let mode: RequestMode = "cors"
+    const requestOptions = {
+      method: 'GET',
+      mode: mode,
+      headers: requestHeaders(token),
+    }
+    return fetch(`${AppConfig.event_service_url}/event/api/v1/events/by/createdby/` + getUserSub(token) + `/paged/data`, requestOptions)
+  } else {
+    return null
+  }
+}
+
+export const fetchAllActiveEvents = (): optional<Promise<Response>> => {
   const token = getToken()
   if (token) {
     let mode: RequestMode = "cors"
@@ -45,7 +59,7 @@ export const fetchAllActiveEvents = (): Promise<Response> | null => {
   }
 }
 
-export const fetchAllRecommendedEvents = (location: Location): Promise<Response> | null => {
+export const fetchAllRecommendedEvents = (location: Location): optional<Promise<Response>> => {
   const token = getToken()
   if (token) {
     let mode: RequestMode = "cors"
@@ -61,7 +75,7 @@ export const fetchAllRecommendedEvents = (location: Location): Promise<Response>
   }
 }
 
-export const searchEvents = (search: EventSearch): Promise<Response> | null => {
+export const searchEvents = (search: EventSearch): optional<Promise<Response>> => {
   const token = getToken()
   if (token) {
     let mode: RequestMode = "cors"
@@ -77,7 +91,7 @@ export const searchEvents = (search: EventSearch): Promise<Response> | null => {
   }
 }
 
-export const createEvent = (event: EventCommand): Promise<Response> | null => {
+export const createEvent = (event: EventCommand): optional<Promise<Response>> => {
   const token = getToken()
   if (token) {
     let mode: RequestMode = "cors"
@@ -94,7 +108,7 @@ export const createEvent = (event: EventCommand): Promise<Response> | null => {
   }
 }
 
-export const updateEvent = (event: EventCommand): Promise<Response> | null => {
+export const updateEvent = (event: EventCommand): optional<Promise<Response>> => {
   const token = getToken()
   if (token) {
     let mode: RequestMode = "cors"
@@ -111,7 +125,7 @@ export const updateEvent = (event: EventCommand): Promise<Response> | null => {
   }
 }
 
-export const deleteEvent = (id: String): Promise<Response> | null  => {
+export const deleteEvent = (id: String): optional<Promise<Response>> => {
   const token = getToken()
   if (token) {
     let mode: RequestMode = "cors"
