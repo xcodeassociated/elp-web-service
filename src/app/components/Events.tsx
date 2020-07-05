@@ -9,11 +9,14 @@ import { Page } from "../model/Page"
 import {createEvent, deleteEvent, updateEvent, fetchAllUserEvents} from '../services/EventService'
 import "../style/Event.css"
 import {EventCommand} from "../model/EventCommand"
-import {Category} from "../model/Category";
-import {hasToken} from "../services/TokenService";
-import {optional} from "../model/Types";
-import Select from "react-dropdown-select";
-import {fetchAllCategories} from "../services/CategoryService";
+import {Category} from "../model/Category"
+import {hasToken} from "../services/TokenService"
+import {optional} from "../model/Types"
+import Select from "react-dropdown-select"
+import {fetchAllCategories} from "../services/CategoryService"
+import DatePicker from "react-datepicker"
+import "react-datepicker/dist/react-datepicker.css"
+import { setMilliseconds } from 'date-fns'
 
 type Error = {
   code: number,
@@ -295,16 +298,34 @@ class Events extends Component<IProp, IState> {
                                    value={eventCreateDescription}/>
                           </div>
                           <div className="form-group">
-                            <label className="location-label">Event Start:</label>
-                            <input type="text" className="location-input" name="description"
-                                   onChange={e => this.setState({...this.state, eventCreateStart: Number(e.target.value)})}
-                                   value={eventCreateStart}/>
+                            <label className="location-label">Event Start Date:</label>
+                            <DatePicker
+                              className="date-picker"
+                              selected={new Date(eventCreateStart)}
+                              onChange={date =>
+                                this.setState({...this.state, eventCreateStart: Number(setMilliseconds(date, 0))})
+                              }
+                              showTimeSelect
+                              timeFormat="HH:mm"
+                              timeIntervals={15}
+                              timeCaption="time"
+                              dateFormat="MMMM d, yyyy h:mm aa"
+                            />
                           </div>
                           <div className="form-group">
-                            <label className="location-label">Event Stop:</label>
-                            <input type="text" className="location-input" name="description"
-                                   onChange={e => this.setState({...this.state, eventCreateStop: Number(e.target.value)})}
-                                   value={eventCreateStop}/>
+                            <label className="location-label">Event Stop Date:</label>
+                            <DatePicker
+                              className="date-picker"
+                              selected={new Date(eventCreateStop)}
+                              onChange={date =>
+                                this.setState({...this.state, eventCreateStop: Number(setMilliseconds(date, 0))})
+                              }
+                              showTimeSelect
+                              timeFormat="HH:mm"
+                              timeIntervals={15}
+                              timeCaption="time"
+                              dateFormat="MMMM d, yyyy h:mm aa"
+                            />
                           </div>
                           <div className="form-group">
                             <label className="location-label">Event Categories:</label>
