@@ -660,6 +660,13 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
                 <div>
                   <h2>{this.state.activeEvent.title}</h2>
                   <p>{this.state.activeEvent.description}</p>
+                  {this.state.activeEvent.start && this.state.activeEvent.stop ?
+                    <p>Duration: {new Date(this.state.activeEvent.start).toLocaleString()}
+                    - {new Date(this.state.activeEvent.stop).toLocaleString()}</p>
+                    : null}
+                  {this.state.activeEvent.categories && this.state.activeEvent.categories.length > 0 ?
+                    <p>{this.state.activeEvent.categories.map(e => e.title + " ")}</p>
+                    : null}
                 </div>
               </Popup>
             )}

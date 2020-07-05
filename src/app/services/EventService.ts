@@ -13,13 +13,13 @@ const requestHeaders = (token: string) => [
   ['Authorization', `Bearer ${token}`]
 ]
 
-const makeUrl = (path: string, page: number = 0, size: number = 10, sortBy: string, sortDirection: string): URL => {
+const makeUrl = (path: string, page: number = 1, size: number = 10, sortBy: string, sortDirection: string): URL => {
   let url: URL = new URL(path), params = {page: page, size: size, sort_by: sortBy, sort_how: sortDirection}
   Object.keys(params).forEach(key => url.searchParams.append(key, params[key]))
   return url
 }
 
-export const fetchAllUserEvents = (page: number = 0, size: number = 10, sortBy: string = 'id', sortDirection: string = 'asc'): optional<Promise<Response>> => {
+export const fetchAllUserEvents = (page: number = 1, size: number = 1000, sortBy: string = 'id', sortDirection: string = 'asc'): optional<Promise<Response>> => {
   const token = getToken()
   if (token) {
     let mode: RequestMode = "cors"
@@ -36,7 +36,7 @@ export const fetchAllUserEvents = (page: number = 0, size: number = 10, sortBy: 
   }
 }
 
-export const fetchAllActiveEvents = (page: number = 0, size: number = 10, sortBy: string = 'id', sortDirection: string = 'asc'): optional<Promise<Response>> => {
+export const fetchAllActiveEvents = (page: number = 1, size: number = 10, sortBy: string = 'id', sortDirection: string = 'asc'): optional<Promise<Response>> => {
   const token = getToken()
   if (token) {
     let mode: RequestMode = "cors"
@@ -52,7 +52,7 @@ export const fetchAllActiveEvents = (page: number = 0, size: number = 10, sortBy
   }
 }
 
-export const fetchAllRecommendedEvents = (location: Location, page: number = 0, size: number = 10, sortBy: string = 'id', sortDirection: string = 'asc'): optional<Promise<Response>> => {
+export const fetchAllRecommendedEvents = (location: Location, page: number = 1, size: number = 10, sortBy: string = 'id', sortDirection: string = 'asc'): optional<Promise<Response>> => {
   const token = getToken()
   if (token) {
     let mode: RequestMode = "cors"
@@ -69,7 +69,7 @@ export const fetchAllRecommendedEvents = (location: Location, page: number = 0, 
   }
 }
 
-export const searchEvents = (search: EventSearch, page: number = 0, size: number = 10, sortBy: string = 'id', sortDirection: string = 'asc'): optional<Promise<Response>> => {
+export const searchEvents = (search: EventSearch, page: number = 1, size: number = 10, sortBy: string = 'id', sortDirection: string = 'asc'): optional<Promise<Response>> => {
   const token = getToken()
   if (token) {
     let mode: RequestMode = "cors"
