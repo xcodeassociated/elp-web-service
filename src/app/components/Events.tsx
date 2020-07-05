@@ -12,6 +12,8 @@ import {EventCommand} from "../model/EventCommand"
 import {Category} from "../model/Category";
 import {hasToken} from "../services/TokenService";
 import {optional} from "../model/Types";
+import Select from "react-dropdown-select";
+import {fetchAllCategories} from "../services/CategoryService";
 
 type Error = {
   code: number,
@@ -27,9 +29,10 @@ interface IState {
   eventCreateLongitude: Number
   eventCreateStart: number
   eventCreateStop: number,
-  eventCreateCategories: string[],
+  eventCreateCategories: Array<Category>,
   eventDeleteId: string,
   eventUpdateId: string,
+  categories: Array<Category>,
   dispatch: Function
 }
 
@@ -53,20 +56,47 @@ class Events extends Component<IProp, IState> {
       eventCreateCategories: [],
       eventDeleteId: "",
       eventUpdateId: "",
+      categories: [],
       dispatch: () => {}
     }
-
+    setTimeout(() => this.fetchAndUpdateCategories(), 250)
     this.onCreateOrUpdateSubmit = this.onCreateOrUpdateSubmit.bind(this)
+  }
+
+  private fetchAndUpdateCategories(): void {
+    this.getCategories()
+      .then((categories: Array<Category>) => this.setState({...this.state, categories: categories}))
+      .catch((error: Error) => console.log(error))
+  }
+
+  private async getCategories(): Promise<Array<Category>> {
+    const response: optional<Response> = await fetchAllCategories()
+    if (response && response.ok) {
+      const data: string = await response.text()
+      const categories: Array<Category>= JSON.parse(data)
+      return categories
+    } else {
+      throw new Error("Could not fetch categories")
+    }
+  }
+
+  private validateEvent(): boolean {
+    return this.state.eventCreateTitle.length > 0
+      && this.state.eventCreateLatitude != 0
+      && this.state.eventCreateLongitude != 0
+      && this.state.eventCreateCategories.length > 0
+      && this.state.eventCreateStart > 0
+      && this.state.eventCreateStop > this.state.eventCreateStart;
   }
 
   private onCreateOrUpdateSubmit(e: any): void {
     e.preventDefault()
-    if (this.state.eventCreateTitle.length > 0) {
+    if (this.validateEvent()) {
       let location: Array<Number> = new Array<Number>(this.state.eventCreateLatitude, this.state.eventCreateLongitude)
       let event: EventCommand =
         new EventCommand((this.state.eventUpdateId.length > 0) ? this.state.eventUpdateId : null,
           this.state.eventCreateTitle, this.state.eventCreateDescription, this.state.eventCreateStart,
-          this.state.eventCreateStop, location, this.state.eventCreateCategories)
+          this.state.eventCreateStop, location, this.state.eventCreateCategories.map(e => e.id))
 
       if (this.state.eventUpdateId.length > 0) {
         this.state.dispatch(this.update(event))
@@ -75,12 +105,12 @@ class Events extends Component<IProp, IState> {
       }
       this.clearState()
     } else {
-      alert('Please enter at least event title')
+      alert('Please enter: event title, location, category, start and stop date')
     }
   }
 
   private onUpdateSubmit(id: string, title: string, description: string, start: number, stop: number,
-                         location: Array<Number>, categories: string[]): void {
+                         location: Array<Number>, categories: Array<Category>): void {
     this.setState({
       ...this.state,
       eventUpdateId: id,
@@ -242,7 +272,7 @@ class Events extends Component<IProp, IState> {
     } else {
       if (hasToken() && this.state.error === undefined) {
         let {eventCreateTitle, eventCreateDescription, eventCreateLatitude, eventCreateLongitude,
-          eventCreateStart, eventCreateStop, eventCreateCategories} = this.state
+          eventCreateStart, eventCreateStop, eventCreateCategories, categories} = this.state
         return (
           <div id="events-list">
             <div id="event-create-form">
@@ -278,9 +308,10 @@ class Events extends Component<IProp, IState> {
                           </div>
                           <div className="form-group">
                             <label className="location-label">Event Categories:</label>
-                            <input type="text" className="location-input" name="description"
-                                   onChange={e => this.setState({...this.state, eventCreateCategories: String(e.target.value).split(',')})}
-                                   value={eventCreateCategories}/>
+                            <Select options={categories}
+                                    onChange={(values: Array<Category>) => this.setState({...this.state, eventCreateCategories: values})}
+                                    values={eventCreateCategories}
+                                    labelField={"title"} valueField={"id"} multi={true} key={"id"} />
                           </div>
                           <div className="form-group">
                             <label>Event Location:</label>
@@ -340,9 +371,9 @@ class Events extends Component<IProp, IState> {
                               <button className="btn btn-primary"
                                       onClick={() => this.onUpdateSubmit(event.id, event.title,
                                         event.description, event.start, event.stop,
-                                        event.location, event.categories.map((e: Category) => e.id))}>Update Event</button>
+                                        event.location, event.categories)}>Update Event</button>
                               <button className="btn btn-danger"
-                              onClick={() => this.onDeleteSubmit(event.id)}>Delete Event</button>
+                                onClick={() => this.onDeleteSubmit(event.id)}>Delete Event</button>
                             </span> : null
                           }
                         </td>
