@@ -17,11 +17,17 @@ import {fetchAllCategories} from "../services/CategoryService"
 import DatePicker from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
 import { setMilliseconds } from 'date-fns'
+import LocationPicker from "react-leaflet-location-picker";
+
+const circleMode = {
+  banner: false
+};
 
 type Error = {
   code: number,
   description: string
 }
+let pointVals: Array<number[]> = []
 
 interface IState {
   events?: Array<EventWithCategory>,
@@ -36,6 +42,7 @@ interface IState {
   eventDeleteId: string,
   eventUpdateId: string,
   categories: Array<Category>,
+  pointMode: any,
   dispatch: Function
 }
 
@@ -52,14 +59,30 @@ class Events extends Component<IProp, IState> {
       error: undefined,
       eventCreateTitle: "",
       eventCreateDescription: "",
-      eventCreateStart: 0,
-      eventCreateStop: 0,
+      eventCreateStart: Date.now(),
+      eventCreateStop: Date.now(),
       eventCreateLatitude: 0,
       eventCreateLongitude: 0,
       eventCreateCategories: [],
       eventDeleteId: "",
       eventUpdateId: "",
       categories: [],
+      pointMode: {
+        banner: true,
+        control: {
+          values: pointVals,
+          onClick: point => {
+            if (pointVals.length === 0) {
+              pointVals.push(point)
+            } else {
+              pointVals[0] = point
+            }
+          },
+          onRemove: point => {
+            pointVals.pop()
+          }
+        }
+      },
       dispatch: () => {}
     }
     setTimeout(() => this.fetchAndUpdateCategories(), 250)
@@ -94,19 +117,26 @@ class Events extends Component<IProp, IState> {
 
   private onCreateOrUpdateSubmit(e: any): void {
     e.preventDefault()
-    if (this.validateEvent()) {
-      let location: Array<Number> = new Array<Number>(this.state.eventCreateLatitude, this.state.eventCreateLongitude)
-      let event: EventCommand =
-        new EventCommand((this.state.eventUpdateId.length > 0) ? this.state.eventUpdateId : null,
-          this.state.eventCreateTitle, this.state.eventCreateDescription, this.state.eventCreateStart,
-          this.state.eventCreateStop, location, this.state.eventCreateCategories.map(e => e.id))
-
-      if (this.state.eventUpdateId.length > 0) {
-        this.state.dispatch(this.update(event))
-      } else {
-        this.state.dispatch(this.create(event))
-      }
-      this.clearState()
+    if (pointVals[0] && pointVals[0][0] && pointVals[0][1]) {
+      this.setState({...this.state, eventCreateLatitude: Number(pointVals[0][0]), eventCreateLongitude: Number(pointVals[0][1])},
+        () => {
+          if (this.validateEvent()) {
+            let location: Array<Number> = new Array<Number>(this.state.eventCreateLatitude, this.state.eventCreateLongitude)
+            let event: EventCommand =
+              new EventCommand((this.state.eventUpdateId.length > 0) ? this.state.eventUpdateId : null,
+                this.state.eventCreateTitle, this.state.eventCreateDescription, this.state.eventCreateStart,
+                this.state.eventCreateStop, location, this.state.eventCreateCategories.map(e => e.id))
+            console.log(">>>> " + JSON.stringify(this.state.eventCreateCategories.map(e => e.id)))
+            if (this.state.eventUpdateId.length > 0) {
+              this.state.dispatch(this.update(event))
+            } else {
+              this.state.dispatch(this.create(event))
+            }
+            this.clearState()
+          } else {
+            alert('Please enter: event title, location, category, start and stop date')
+          }
+        })
     } else {
       alert('Please enter: event title, location, category, start and stop date')
     }
@@ -114,6 +144,9 @@ class Events extends Component<IProp, IState> {
 
   private onUpdateSubmit(id: string, title: string, description: string, start: number, stop: number,
                          location: Array<Number>, categories: Array<Category>): void {
+    // @ts-ignore
+    pointVals = [location]
+
     this.setState({
       ...this.state,
       eventUpdateId: id,
@@ -123,8 +156,25 @@ class Events extends Component<IProp, IState> {
       eventCreateStop: stop,
       eventCreateLatitude: location[0],
       eventCreateLongitude: location[1],
-      eventCreateCategories: categories
+      eventCreateCategories: categories,
+      pointMode: {
+        banner: false,
+        control: {
+          values: pointVals,
+          onClick: point => {
+            if (pointVals.length === 0) {
+              pointVals.push(point)
+            } else {
+              pointVals[0] = point
+            }
+          },
+          onRemove: point => {
+            pointVals.pop()
+          }
+        }
+      }
     })
+
   }
 
   private onDeleteSubmit(id: string): void {
@@ -145,8 +195,8 @@ class Events extends Component<IProp, IState> {
       eventCreateDescription: "",
       eventCreateLatitude: 0,
       eventCreateLongitude: 0,
-      eventCreateStart: 0,
-      eventCreateStop: 0,
+      eventCreateStart: Date.now(),
+      eventCreateStop: Date.now(),
       eventCreateCategories: [],
     })
   }
@@ -202,13 +252,7 @@ class Events extends Component<IProp, IState> {
         eventPromise.then((response: Response) => {
           if (response.ok) {
             response.text().then(text => {
-              let object: EventWithCategory = JSON.parse(text)
-              if (this.state.events) {
-                this.setState({
-                  ...this.state,
-                  events: this.state.events.concat(object)
-                })
-              }
+              this.getAllEvents()
             })
           } else {
             console.error("error: request returned non-ok response: " + JSON.stringify(response))
@@ -334,25 +378,15 @@ class Events extends Component<IProp, IState> {
                                     values={eventCreateCategories}
                                     labelField={"title"} valueField={"id"} multi={true} key={"id"} />
                           </div>
-                          <div className="form-group">
-                            <label>Event Location:</label>
-                            <div className="location-form">
-                              <label className="location-label">Latitude: </label>
-                              <input type="text" className="location-input" name="latitude"
-                                     onChange={e => this.setState({...this.state, eventCreateLatitude: Number(e.target.value)})}
-                                     value={String(eventCreateLatitude)}/>
-                              <label className="location-label">Longitude: </label>
-                              <input type="text" className="location-input" name="longitude"
-                                     onChange={e => this.setState({...this.state, eventCreateLongitude: Number(e.target.value)})}
-                                     value={String(eventCreateLongitude)}/>
-                            </div>
-                          </div>
                         </div>
                         <div className="form-group">
                           {this.state.eventUpdateId.length > 0 ?
                             <button className="btn btn-info">Update Event</button> :
                             <button className="btn btn-success">Create Event</button>}
                           <button className="btn btn-default" onClick={this.onClearSubmit.bind(this)}>Clear</button>
+                        </div>
+                        <div className="form-group">
+                          <LocationPicker pointMode={this.state.pointMode} circleMode={circleMode} />
                         </div>
                       </form>
                     </td>

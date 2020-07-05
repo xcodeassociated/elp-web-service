@@ -15,3 +15,7 @@
 .date-picker {
   width: 200px;
 }
+
+.flex-container.some-margin {
+  display: none;
+}
