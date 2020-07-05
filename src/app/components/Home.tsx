@@ -20,6 +20,7 @@ import Switch from "react-switch"
 import {deregister, register} from "../services/UserHistoryService";
 import {hasToken} from "../services/TokenService";
 import Select from "react-dropdown-select";
+import ReactPaginate from 'react-paginate';
 import {fetchAllSpots} from "../services/SpotService";
 import {Spot} from "../model/Spot";
 
@@ -133,6 +134,12 @@ class CategoryItem extends Component<ICategoryItem> {
   }
 }
 
+interface Selectable<ID, T> {
+  id: ID,
+  title: string,
+  data: T
+}
+
 interface IHomeProps {
   isRedirectHome: boolean
 }
@@ -153,7 +160,16 @@ interface IHomeState {
   timer: optional<any>,
   refreshOn: boolean,
   recommendedTab: boolean,
-  eventListTabIndex: number
+  eventListTabIndex: number,
+  elementsPerPage: Array<Selectable<number, number>>,
+  selectedElementsPerPage: Selectable<number, number>,
+  elementsSortBy: Array<Selectable<number, string>>,
+  selectedElementsSortBy: Selectable<number, string>,
+  elementsSortDirection: Array<Selectable<number, string>>,
+  selectedElementsSortDirection: Selectable<number, string>,
+  totalPages: number,
+  currentPage: number,
+  totalElements: number
 }
 
 class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
@@ -175,12 +191,32 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
       timer: null,
       refreshOn: true,
       recommendedTab: false,
-      eventListTabIndex: 0
+      eventListTabIndex: 0,
+      elementsPerPage: [
+        {id: 0, title: '1', data: 1},
+        {id: 1, title: '2', data: 2},
+        {id: 2, title: '5', data: 5},
+        {id: 3, title: '20', data: 20}
+        ],
+      selectedElementsPerPage: {id: 1, title: '2', data: 2},
+      elementsSortBy: [
+        {id: 0, title: 'default', data: 'id'},
+        {id: 1, title: 'created', data: 'createdDate'},
+      ],
+      selectedElementsSortBy: {id: 0, title: 'default', data: 'id'},
+      elementsSortDirection: [
+        {id: 0, title: 'asc', data: 'asc'},
+        {id: 1, title: 'desc', data: 'desc'}
+      ],
+      selectedElementsSortDirection: {id: 0, title: 'asc', data: 'asc'},
+      totalPages: 0,
+      currentPage: 0,
+      totalElements: 0
     }
-    setTimeout(() => this.getEvents(), 250);
-    setTimeout(() => this.getRecommendedEvents(), 250);
-    setTimeout(() => this.fetchAndUpdateCategories(), 250);
-    setTimeout(() => this.fetchLocations(), 250);
+    setTimeout(() => this.getEventsPaged(), 250);
+    setTimeout(() => this.getRecommendedEventsPaged(), 250);
+    setTimeout(() => this.getCategories(), 250);
+    setTimeout(() => this.getLocations(), 250);
   }
 
   public componentDidMount(): void {
@@ -195,13 +231,13 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
 
   }
 
-  private fetchAndUpdateCategories(): void {
-    this.getCategories()
+  private getCategories(): void {
+    this.fetchCategories()
       .then((categories: Array<Category>) => this.setState({...this.state, categories: categories}))
       .catch((error: Error) => console.log(error))
   }
 
-  private async getCategories(): Promise<Array<Category>> {
+  private async fetchCategories(): Promise<Array<Category>> {
     const response: optional<Response> = await fetchAllCategories()
     if (response && response.ok) {
       const data: string = await response.text()
@@ -212,8 +248,8 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
     }
   }
 
-  private fetchLocations(): void {
-    this.getLocations()
+  private getLocations(): void {
+    this.fetchLocations()
       .then((locations: Array<Spot>) => {
         console.log(JSON.stringify(locations))
         this.setState({...this.state, spots: locations})
@@ -221,7 +257,7 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
       .catch((error: Error) => console.log(error))
   }
 
-  private async getLocations(): Promise<Array<Spot>> {
+  private async fetchLocations(): Promise<Array<Spot>> {
     const response: optional<Response> = await fetchAllSpots()
     if (response && response.ok) {
       const data: string = await response.text()
@@ -232,9 +268,24 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
     }
   }
 
+  private getEventsPaged(): void {
+    this.getEvents(
+      (this.state.currentPage > 0) ? this.state.currentPage : 1,
+      this.state.selectedElementsPerPage.data,
+      this.state.selectedElementsSortBy.data,
+      this.state.selectedElementsSortDirection.data)
+  }
+
+  private getRecommendedEventsPaged(): void {
+    this.getRecommendedEvents(
+      (this.state.currentPage > 0) ? this.state.currentPage : 1,
+      this.state.selectedElementsPerPage.data,
+      this.state.selectedElementsSortBy.data,
+      this.state.selectedElementsSortDirection.data)
+  }
+
   private initRefreshTimer(): void {
-    let timer = setInterval(() =>
-      (this.state.recommendedTab) ? this.getRecommendedEvents() : this.getEvents(), 10000)
+    let timer = setInterval(() => this.reloadEvents(), 10000)
     this.setState({...this.state, timer: timer})
   }
 
@@ -248,6 +299,8 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
           let validated: Array<EventWrapper> = objects.filter(e => e.item.location != null)
           this.setState({
             ...this.state,
+            totalPages: page.totalPages,
+            totalElements: page.totalElements,
             events: validated
           })
         }
@@ -273,6 +326,8 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
             let validated: Array<EventWrapper> = objects.filter(e => e.item.location != null)
             this.setState({
               ...this.state,
+              totalPages: page.totalPages,
+              totalElements: page.totalElements,
               recommended: validated
             })
           }
@@ -289,9 +344,9 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
     }
   }
 
-  private getEvents(): void {
+  private getEvents(page: number, size: number, sortBy: string, sortDirection: string): void {
     if (hasToken() && this.state.refreshOn) {
-      let eventPromise: optional<Promise<Response>> = fetchAllActiveEvents()
+      let eventPromise: optional<Promise<Response>> = fetchAllActiveEvents(page, size, sortBy, sortDirection)
       if (eventPromise != null) {
         eventPromise.then((response: Response) => this.updateEvents(response)).catch((reason: any) => {
           console.error("request error 3: " + JSON.stringify(reason))
@@ -300,10 +355,11 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
     }
   }
 
-  private getRecommendedEvents(): void {
+  private getRecommendedEvents(page: number, size: number, sortBy: string, sortDirection: string): void {
     if (hasToken() && this.state.refreshOn && this.props.coords) {
       let eventPromise: optional<Promise<Response>> =
-        fetchAllRecommendedEvents(new Location([this.props.coords.latitude, this.props.coords.longitude]))
+        fetchAllRecommendedEvents(new Location([this.props.coords.latitude, this.props.coords.longitude]),
+          page, size, sortBy, sortDirection)
       if (eventPromise != null) {
         eventPromise.then((response: Response) => this.updateRecommendedEvents(response))
           .catch((reason: any) => console.error("request error 3: " + JSON.stringify(reason)))
@@ -330,8 +386,7 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
   }
 
   private itemClick(e: EventWrapper): void {
-    this.setState({...this.state, activeEvent: e.item})
-    e.referance.scrollIntoView()
+    this.setState({...this.state, activeEvent: e.item}, e.referance.scrollIntoView())
   }
 
   private mapItemClick(mapItem: EventWithCategory): void {
@@ -367,7 +422,11 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
   }
 
   private eventTabSelected(index: number) {
-    this.setState({...this.state, recommendedTab: (index === 1), eventListTabIndex: index})
+    this.setState({...this.state, recommendedTab: (index === 1), eventListTabIndex: index,
+      currentPage: 0, totalPages: 0, totalElements: 0,
+      selectedElementsPerPage: {id: 1, title: '2', data: 2},
+      selectedElementsSortDirection: {id: 0, title: 'asc', data: 'asc'},
+      selectedElementsSortBy: {id: 0, title: 'default', data: 'id'}}, this.reloadEvents.bind(this))
   }
 
   private handleSearchInputChange(event): void {
@@ -375,12 +434,16 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
   }
 
   private clear(e: any): void {
-    this.setState({...this.state, searchTitle: "", selectedCategories: [], refreshOn: true})
-    this.getEvents()
+    this.setState({...this.state, searchTitle: "", selectedCategories: [], refreshOn: true}, this.getEventsPaged.bind(this))
+  }
+
+  private reloadEvents(): void {
+    (this.state.recommendedTab) ? this.getRecommendedEventsPaged() : this.getEventsPaged()
   }
 
   public render() {
-    let {selectedSpots, spots} = this.state
+    let {selectedSpots, spots, elementsPerPage, selectedElementsPerPage, elementsSortBy, selectedElementsSortBy,
+      elementsSortDirection, selectedElementsSortDirection} = this.state
     return (
       <div className="grid-container">
         <div className="item2">
@@ -466,7 +529,7 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
                             item={e.item}
                             active={this.state.activeEvent}
                             onClick={() => this.itemClick(e)}
-                            reload={() => this.getEvents()}
+                            reload={() => this.getEventsPaged()}
                             setRef={el => e.referance = el}
                             key={e.item.id}
                       />
@@ -479,7 +542,7 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
                             item={e.item}
                             active={this.state.activeEvent}
                             onClick={() => this.itemClick(e)}
-                            reload={() => this.getEvents()}
+                            reload={() => this.getEventsPaged()}
                             setRef={el => e.referance = el}
                             key={e.item.id}
                       />
@@ -487,6 +550,63 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
                 </TabPanel>
             </Tabs>
           </div> : <p className="login-hint">Please login to see events</p>}
+          <div className="item2-footer">
+            {hasToken() ?
+            <div className="pagination-section">
+              <ReactPaginate
+                breakClassName={'page-item'}
+                breakLinkClassName={'page-link'}
+                containerClassName={'pagination-wrapper'}
+                pageClassName={'page-item'}
+                pageLinkClassName={'page-link'}
+                previousClassName={'page-item'}
+                previousLinkClassName={'page-link'}
+                nextClassName={'page-item'}
+                nextLinkClassName={'page-link'}
+                activeClassName={'active'}
+                pageCount={this.state.totalPages}
+                forcePage={(this.state.currentPage >= 1) ? this.state.currentPage - 1 : this.state.currentPage}
+                marginPagesDisplayed={2}
+                pageRangeDisplayed={5}
+                onPageChange={(data: any) =>
+                  this.setState({...this.state, currentPage: (data.selected + 1)}, this.reloadEvents.bind(this))
+                }
+              />
+              <div className="pagination-info">
+                <div className="pagination-info-element">
+                  <Select options={elementsPerPage} dropdownPosition="top"
+                          onChange={(values: Array<Selectable<number, number>>) =>
+                            this.setState({...this.state, selectedElementsPerPage: values[0], currentPage: 0}, this.reloadEvents.bind(this))
+                          }
+                          values={[selectedElementsPerPage]} multi={false} labelField={"title"} valueField={"id"} key={"id"} />
+                </div>
+                <div className="pagination-info-element">
+                  <Select options={elementsSortBy} dropdownPosition="top"
+                          onChange={(values: Array<Selectable<number, string>>) =>
+                            this.setState({...this.state, selectedElementsSortBy: values[0], currentPage: 0}, this.reloadEvents.bind(this))
+                          }
+                          values={[selectedElementsSortBy]} multi={false} labelField={"title"} valueField={"id"} key={"id"} />
+                </div>
+                <div className="pagination-info-element">
+                  <Select options={elementsSortDirection} dropdownPosition="top"
+                          onChange={(values: Array<Selectable<number, string>>) =>
+                            this.setState({...this.state, selectedElementsSortDirection: values[0], currentPage: 0}, this.reloadEvents.bind(this))
+                          }
+                          values={[selectedElementsSortDirection]} multi={false} labelField={"title"} valueField={"id"} key={"id"} />
+                </div>
+                <div className="pagination-info-element">
+                  <label>
+                    items:
+                  </label>
+                </div>
+                <div className="pagination-info-element">
+                  <label>
+                    {this.state.totalElements}
+                  </label>
+                </div>
+              </div>
+            </div> : null}
+          </div>
         </div>
         <div className="item3">
           <Map center={(this.state.centerOnUser && this.props.coords)

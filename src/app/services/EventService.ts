@@ -13,8 +13,13 @@ const requestHeaders = (token: string) => [
   ['Authorization', `Bearer ${token}`]
 ]
 
-// todo: remove if not needed
-export const fetchAllEvents = (): optional<Promise<Response>> => {
+const makeUrl = (path: string, page: number = 0, size: number = 10, sortBy: string, sortDirection: string): URL => {
+  let url: URL = new URL(path), params = {page: page, size: size, sort_by: sortBy, sort_how: sortDirection}
+  Object.keys(params).forEach(key => url.searchParams.append(key, params[key]))
+  return url
+}
+
+export const fetchAllUserEvents = (page: number = 0, size: number = 10, sortBy: string = 'id', sortDirection: string = 'asc'): optional<Promise<Response>> => {
   const token = getToken()
   if (token) {
     let mode: RequestMode = "cors"
@@ -23,13 +28,15 @@ export const fetchAllEvents = (): optional<Promise<Response>> => {
       mode: mode,
       headers: requestHeaders(token),
     }
-    return fetch(`${AppConfig.event_service_url}/event/api/v1/events/paged/data`, requestOptions)
+    const path: string = `${AppConfig.event_service_url}/event/api/v1/events/by/createdby/` + getUserSub(token) + `/paged/data`
+    const url: URL = makeUrl(path, page, size, sortBy, sortDirection)
+    return fetch(url.toString(), requestOptions)
   } else {
     return null
   }
 }
 
-export const fetchAllUserEvents = (): optional<Promise<Response>> => {
+export const fetchAllActiveEvents = (page: number = 0, size: number = 10, sortBy: string = 'id', sortDirection: string = 'asc'): optional<Promise<Response>> => {
   const token = getToken()
   if (token) {
     let mode: RequestMode = "cors"
@@ -38,28 +45,14 @@ export const fetchAllUserEvents = (): optional<Promise<Response>> => {
       mode: mode,
       headers: requestHeaders(token),
     }
-    return fetch(`${AppConfig.event_service_url}/event/api/v1/events/by/createdby/` + getUserSub(token) + `/paged/data`, requestOptions)
+    const url: URL = makeUrl(`${AppConfig.event_service_url}/event/api/v1/events/active/paged/data`, page, size, sortBy, sortDirection)
+    return fetch(url.toString(), requestOptions)
   } else {
     return null
   }
 }
 
-export const fetchAllActiveEvents = (): optional<Promise<Response>> => {
-  const token = getToken()
-  if (token) {
-    let mode: RequestMode = "cors"
-    const requestOptions = {
-      method: 'GET',
-      mode: mode,
-      headers: requestHeaders(token),
-    }
-    return fetch(`${AppConfig.event_service_url}/event/api/v1/events/active/paged/data`, requestOptions)
-  } else {
-    return null
-  }
-}
-
-export const fetchAllRecommendedEvents = (location: Location): optional<Promise<Response>> => {
+export const fetchAllRecommendedEvents = (location: Location, page: number = 0, size: number = 10, sortBy: string = 'id', sortDirection: string = 'asc'): optional<Promise<Response>> => {
   const token = getToken()
   if (token) {
     let mode: RequestMode = "cors"
@@ -69,13 +62,14 @@ export const fetchAllRecommendedEvents = (location: Location): optional<Promise<
       headers: requestHeaders(token),
       body: JSON.stringify(location)
     }
-    return fetch(`${AppConfig.event_service_url}/event/api/v1/events/preferred/paged/data`, requestOptions)
+    const url: URL = makeUrl(`${AppConfig.event_service_url}/event/api/v1/events/preferred/paged/data`, page, size, sortBy, sortDirection)
+    return fetch(url.toString(), requestOptions)
   } else {
     return null
   }
 }
 
-export const searchEvents = (search: EventSearch): optional<Promise<Response>> => {
+export const searchEvents = (search: EventSearch, page: number = 0, size: number = 10, sortBy: string = 'id', sortDirection: string = 'asc'): optional<Promise<Response>> => {
   const token = getToken()
   if (token) {
     let mode: RequestMode = "cors"
@@ -85,7 +79,8 @@ export const searchEvents = (search: EventSearch): optional<Promise<Response>> =
       headers: requestHeaders(token),
       body: JSON.stringify(search)
     }
-    return fetch(`${AppConfig.event_service_url}/event/api/v1/events/search/data`, requestOptions)
+    const url: URL = makeUrl(`${AppConfig.event_service_url}/event/api/v1/events/search/data`, page, size, sortBy, sortDirection)
+    return fetch(url.toString(), requestOptions)
   } else {
     return null
   }
