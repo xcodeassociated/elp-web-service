@@ -361,8 +361,8 @@ class Events extends Component<IProp, IState> {
                         <td>{event.title}</td>
                         <td>{event.description}</td>
                         <td>{(event.categories) ? event.categories.map((e: Category) => e.title + " ") : ''}</td>
-                        <td>{event.start}</td>
-                        <td>{event.stop}</td>
+                        <td>{(event.start) ? new Date(event.start).toLocaleString() : ''}</td>
+                        <td>{(event.stop) ? new Date(event.stop).toLocaleString() : ''}</td>
                         <td>{event.location[0]}</td>
                         <td>{event.location[1]}</td>
                         <td>
