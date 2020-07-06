@@ -234,7 +234,7 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
   private getCategories(): void {
     this.fetchCategories()
       .then((categories: Array<Category>) => this.setState({...this.state, categories: categories}))
-      .catch((error: Error) => console.log(error))
+      .catch((error: Error) => console.error(error))
   }
 
   private async fetchCategories(): Promise<Array<Category>> {
@@ -254,7 +254,7 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
         console.log(JSON.stringify(locations))
         this.setState({...this.state, spots: locations})
       })
-      .catch((error: Error) => console.log(error))
+      .catch((error: Error) => console.error(error))
   }
 
   private async fetchLocations(): Promise<Array<Spot>> {
@@ -285,7 +285,10 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
   }
 
   private initRefreshTimer(): void {
-    let timer = setInterval(() => this.reloadEvents(), 10000)
+    let timer = setInterval(() => {
+      if (this.state.refreshOn) {
+        this.reloadEvents()
+      }}, 10000)
     this.setState({...this.state, timer: timer})
   }
 
@@ -374,11 +377,14 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
       const search: EventSearch = (includeDistance) ?
         eventSearch(title, parsedCategories, range, location, this.state.searchActive)
         : eventSearch(title, parsedCategories, null, null, this.state.searchActive)
-      let eventPromise: optional<Promise<Response>> = searchEvents(search)
+      let eventPromise: optional<Promise<Response>> = searchEvents(search,
+        (this.state.currentPage > 0) ? this.state.currentPage : 1,
+        this.state.selectedElementsPerPage.data,
+        this.state.selectedElementsSortBy.data,
+        this.state.selectedElementsSortDirection.data)
       if (eventPromise != null) {
         eventPromise.then((response: Response) => {
           this.updateEvents(response)
-          this.eventTabSelected(0)
         })
           .catch((reason: any) => console.error("request error: " + JSON.stringify(reason)))
       }
@@ -414,10 +420,11 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
 
   private search(e: any): void {
     if (this.areEventsSearchable()) {
-      this.setState({...this.state, refreshOn: false, activeEvent: null})
-      this.searchEvents(this.state.searchTitle, this.state.selectedCategories,
-        this.state.selectedRange, this.state.includeRange,
-        (this.props.coords) ? new Array<Number>(this.props.coords.latitude, this.props.coords.longitude) : null)
+      this.setState({...this.state, refreshOn: false, activeEvent: null, eventListTabIndex: 0, currentPage: 0}, () => {
+        this.searchEvents(this.state.searchTitle, this.state.selectedCategories,
+          this.state.selectedRange, this.state.includeRange,
+          (this.props.coords) ? new Array<Number>(this.props.coords.latitude, this.props.coords.longitude) : null)
+      })
     }
   }
 
@@ -434,11 +441,25 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
   }
 
   private clear(e: any): void {
-    this.setState({...this.state, searchTitle: "", selectedCategories: [], refreshOn: true}, this.getEventsPaged.bind(this))
+    this.setState({...this.state, searchTitle: "", selectedCategories: [], refreshOn: true,
+      currentPage: 0, totalPages: 0, totalElements: 0,
+      selectedElementsPerPage: {id: 1, title: '2', data: 2},
+      selectedElementsSortDirection: {id: 0, title: 'asc', data: 'asc'},
+      selectedElementsSortBy: {id: 0, title: 'default', data: 'id'}}, this.getEventsPaged.bind(this))
   }
 
   private reloadEvents(): void {
-    (this.state.recommendedTab) ? this.getRecommendedEventsPaged() : this.getEventsPaged()
+    if (this.state.recommendedTab) {
+      this.getRecommendedEventsPaged()
+    } else {
+      if (!this.state.refreshOn) {
+        this.searchEvents(this.state.searchTitle, this.state.selectedCategories,
+          this.state.selectedRange, this.state.includeRange,
+          (this.props.coords) ? new Array<Number>(this.props.coords.latitude, this.props.coords.longitude) : null)
+      } else {
+        this.getEventsPaged()
+      }
+    }
   }
 
   public render() {
