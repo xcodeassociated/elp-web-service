@@ -1,19 +1,19 @@
 import React, {Component, ReactChild} from "react";
 import {NavLink, Route, Router, Switch} from 'react-router-dom'
-import Home from "../components/Home";
+import Home from "../components/Home/Home";
 import {Nav} from "react-bootstrap";
 import history from './History';
 import {connect} from 'react-redux';
-import Events from "../components/Events";
+import Events from "../components/Events/Events";
 import {KeycloakEvent, KeycloakProvider, KeycloakTokens} from "@react-keycloak/web";
-import keycloak from "../components/Keycloak";
+import keycloak from "../components/Keycloak/Keycloak";
 import {KeycloakError} from "keycloak-js";
 import {loginAction, logoutAction, redirectHomeAction} from '../store/actions/Actions'
 import NotFound from "../components/error/NotFound";
 import "../style/App.css";
 import "../style/AppRouter.css";
-import Settings from "../components/Settings";
-import UserHistory from "../components/UserHistory";
+import Settings from "../components/Settings/Settings";
+import UserHistory from "../components/UserHistory/UserHistory";
 import {hasToken} from "../services/TokenService";
 
 type NamedProps = {

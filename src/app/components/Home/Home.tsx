@@ -1,28 +1,32 @@
 import React, {Component} from "react";
 import { Map, Marker, Popup, TileLayer } from "react-leaflet"
 import { Icon } from "leaflet"
-import "../style/App.css"
-import "../style/Home.css"
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs'
 import 'react-tabs/style/react-tabs.css'
 import { connect } from 'react-redux'
 import { GeolocatedProps, geolocated } from "react-geolocated"
-import {fetchAllActiveEvents, fetchAllRecommendedEvents, searchEvents} from "../services/EventService"
-import { Page } from "../model/Page"
-import { EventWithCategory } from "../model/EventWithCategory"
-import {eventSearch, EventSearch} from "../model/EventSearch"
-import {fetchAllCategories} from "../services/CategoryService"
-import {Category} from "../model/Category"
-import {Location} from "../model/Location"
-import {arrayOptional, optional} from "../model/Types"
+import {fetchAllActiveEvents, fetchAllRecommendedEvents, searchEvents} from "../../services/EventService"
+import { Page } from "../../model/Page"
+import { EventWithCategory } from "../../model/EventWithCategory"
+import {eventSearch, EventSearch} from "../../model/EventSearch"
+import {fetchAllCategories} from "../../services/CategoryService"
+import {Category} from "../../model/Category"
+import {Location} from "../../model/Location"
+import {arrayOptional, optional} from "../../model/Types"
 import NumericInput from 'react-numeric-input'
 import Switch from "react-switch"
-import {deregister, register} from "../services/UserHistoryService";
-import {hasToken} from "../services/TokenService";
+import {hasToken} from "../../services/TokenService";
 import Select from "react-dropdown-select";
 import ReactPaginate from 'react-paginate';
-import {fetchAllSpots} from "../services/SpotService";
-import {Spot} from "../model/Spot";
+import {fetchAllSpots} from "../../services/SpotService";
+import {Spot} from "../../model/Spot";
+import EventWrapper from "./partials/EventWrapper";
+import Item from "./partials/Item";
+import CategoryItem from "./partials/CategoryItem";
+import Selectable from "./partials/Selectable";
+
+import "../../style/App.css"
+import "../../style/Home.css"
 
 export const icon = new Icon({
   iconUrl: "/location.svg",
@@ -33,112 +37,6 @@ export const userIcon = new Icon({
   iconUrl: "/user.svg",
   iconSize: [25, 25]
 })
-
-interface EventWrapper {
-  item: EventWithCategory,
-  referance: optional<any>
-}
-
-interface IItemProps {
-  onClick: Function,
-  reload: Function,
-  item: EventWithCategory,
-  active: optional<EventWithCategory>,
-  setRef: any,
-  title: String
-}
-
-class Item extends Component<IItemProps> {
-  constructor(props) {
-    super(props)
-    this.state = {}
-  }
-
-  private active(): void {
-    this.props.onClick()
-  }
-
-  private join(): void {
-    const apiPromise: optional<Promise<Response>> = register(this.props.item.id)
-    if (apiPromise) {
-      apiPromise.then((response: Response) => {
-        if (response.ok) {
-          this.props.reload()
-        }
-      }).catch((e: any) => console.error(e))
-    }
-  }
-
-  private leave(): void {
-    const apiPromise: optional<Promise<Response>> = deregister(this.props.item.id)
-    if (apiPromise) {
-      apiPromise.then((response: Response) => {
-        if (response.ok) {
-          this.props.reload()
-        }
-      }).catch((e: any) => console.error(e))
-    }
-  }
-
-  public render() {
-    return (
-      <div className={(this.props.active && this.props.item.id === this.props.active.id) ? 'item active' : 'item'}
-           onClick={() => this.active()}>
-        <div ref={this.props.setRef} className="item-info">
-          <img src='/location-item.svg' className="inline item-photo" />
-          <div className="inline item-title">
-            {this.props.title}
-          </div>
-          <div className="inline item-button">
-            {(this.props.item.registered) ?
-              <button onClick={this.leave.bind(this)}>Leave</button>
-              :
-              (this.props.item.stop && this.props.item.stop >= Date.now())
-                ? <button onClick={this.join.bind(this)}>Join</button> : null}
-          </div>
-        </div>
-        <div className="item-categoryBox">
-          {this.props.item.categories.map((e: Category) => (
-            <span key={e.id} className="item-category">
-              {e.title}
-            </span>
-          ))}
-        </div>
-      </div>
-    )
-  }
-}
-
-interface ICategoryItem {
-  onClick: Function,
-  selected: Array<Object>,
-  item: Category
-}
-
-class CategoryItem extends Component<ICategoryItem> {
-  constructor(props) {
-    super(props)
-    this.state = {}
-  }
-
-  private active(): void {
-    this.props.onClick()
-  }
-
-  public render() {
-    return (
-      <div className={this.props.selected.includes(this.props.item) ? 'categoryItem active' : 'categoryItem'}>
-        <a onClick={() => this.active()}>{this.props.item.title}</a>
-      </div>
-    )
-  }
-}
-
-interface Selectable<ID, T> {
-  id: ID,
-  title: string,
-  data: T
-}
 
 interface IHomeProps {
   isRedirectHome: boolean

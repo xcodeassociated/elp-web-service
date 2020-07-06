@@ -2,14 +2,14 @@ import React, {Component} from 'react'
 import {Redirect} from "react-router-dom"
 import {connect} from 'react-redux'
 import {MDBTable, MDBTableBody, MDBTableHead} from 'mdbreact'
-import {EventWithCategory} from "../model/EventWithCategory"
-import { Page } from "../model/Page"
-import "../style/Event.css"
-import {Category} from "../model/Category";
-import {deregister, fetchUserHistory} from "../services/UserHistoryService";
-import {optional} from "../model/Types";
-import {UserEvent} from "../model/UserEvent";
-import {hasToken} from "../services/TokenService";
+import {EventWithCategory} from "../../model/EventWithCategory"
+import { Page } from "../../model/Page"
+import "../../style/Event.css"
+import {Category} from "../../model/Category";
+import {deregister, fetchUserHistory} from "../../services/UserHistoryService";
+import {optional} from "../../model/Types";
+import {UserEvent} from "../../model/UserEvent";
+import {hasToken} from "../../services/TokenService";
 
 type Error = {
   code: number,

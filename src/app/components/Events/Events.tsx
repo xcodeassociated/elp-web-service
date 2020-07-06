@@ -1,23 +1,23 @@
 import React, {Component} from 'react'
 import {Redirect} from "react-router-dom"
 import {connect} from 'react-redux'
-import '../style/Events.css'
 import {MDBTable, MDBTableBody, MDBTableHead} from 'mdbreact'
-import {EventWithCategory} from "../model/EventWithCategory"
-import {Event} from "../model/Event"
-import { Page } from "../model/Page"
-import {createEvent, deleteEvent, updateEvent, fetchAllUserEvents} from '../services/EventService'
-import "../style/Event.css"
-import {EventCommand} from "../model/EventCommand"
-import {Category} from "../model/Category"
-import {hasToken} from "../services/TokenService"
-import {optional} from "../model/Types"
+import {EventWithCategory} from "../../model/EventWithCategory"
+import {Event} from "../../model/Event"
+import { Page } from "../../model/Page"
+import {createEvent, deleteEvent, updateEvent, fetchAllUserEvents} from '../../services/EventService'
+import {EventCommand} from "../../model/EventCommand"
+import {Category} from "../../model/Category"
+import {hasToken} from "../../services/TokenService"
+import {optional} from "../../model/Types"
 import Select from "react-dropdown-select"
-import {fetchAllCategories} from "../services/CategoryService"
+import {fetchAllCategories} from "../../services/CategoryService"
 import DatePicker from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
 import { setMilliseconds } from 'date-fns'
-import LocationPicker from "react-leaflet-location-picker";
+import LocationPicker from "react-leaflet-location-picker"
+
+import '../../style/Events.css'
 
 const circleMode = {
   banner: false

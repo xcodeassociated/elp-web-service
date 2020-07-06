@@ -1,18 +1,18 @@
 import React, {Component} from "react";
 import {connect} from 'react-redux';
 import {Redirect} from "react-router-dom"
-import {Category} from "../model/Category";
+import {Category} from "../../model/Category";
 import Select from "react-dropdown-select"
 import {MDBTable, MDBTableBody, MDBTableHead} from 'mdbreact'
-import {fetchAllCategories} from "../services/CategoryService";
-import {UserData} from "../model/UserData";
-import {fetchUserData, saveUserData} from "../services/UserDataService";
-import {UserDataCommand} from "../model/UserDataCommand";
-import {UserAccountContactData} from "../model/UserAccountContactData";
-import {optional} from "../model/Types";
-import {fetchUserAccountData, updateUserAccountData} from "../services/UserAccountService";
-import {UserAccountData} from "../model/UserAccountData";
-import {UserAccountDataCommand} from "../model/UserAccountDataCommand";
+import {fetchAllCategories} from "../../services/CategoryService";
+import {UserData} from "../../model/UserData";
+import {fetchUserData, saveUserData} from "../../services/UserDataService";
+import {UserDataCommand} from "../../model/UserDataCommand";
+import {UserAccountContactData} from "../../model/UserAccountContactData";
+import {optional} from "../../model/Types";
+import {fetchUserAccountData, updateUserAccountData} from "../../services/UserAccountService";
+import {UserAccountData} from "../../model/UserAccountData";
+import {UserAccountDataCommand} from "../../model/UserAccountDataCommand";
 
 interface ISettingsState {
   firstName: optional<string>,
