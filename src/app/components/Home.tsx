@@ -544,7 +544,7 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
           <div className="item2-list">
             <Tabs selectedIndex={this.state.eventListTabIndex} onSelect={(index: number) => this.eventTabSelected(index)}>
               <TabList>
-                <Tab>All</Tab>
+                <Tab>{(this.state.refreshOn) ? 'All' : 'Search'}</Tab>
                 <Tab>Recommended</Tab>
               </TabList>
                 <TabPanel>
