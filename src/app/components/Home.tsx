@@ -169,7 +169,8 @@ interface IHomeState {
   selectedElementsSortDirection: Selectable<number, string>,
   totalPages: number,
   currentPage: number,
-  totalElements: number
+  totalElements: number,
+  initDispatch: Function
 }
 
 class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
@@ -211,15 +212,18 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
       selectedElementsSortDirection: {id: 0, title: 'asc', data: 'asc'},
       totalPages: 0,
       currentPage: 0,
-      totalElements: 0
+      totalElements: 0,
+      initDispatch: () => {
+        this.getEventsPaged()
+        this.getRecommendedEventsPaged()
+        this.getCategories()
+        this.getLocations()
+      }
     }
-    setTimeout(() => this.getEventsPaged(), 250);
-    setTimeout(() => this.getRecommendedEventsPaged(), 250);
-    setTimeout(() => this.getCategories(), 250);
-    setTimeout(() => this.getLocations(), 250);
   }
 
   public componentDidMount(): void {
+    this.state.initDispatch()
     this.initRefreshTimer()
   }
 

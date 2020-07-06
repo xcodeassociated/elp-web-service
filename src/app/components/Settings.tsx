@@ -25,7 +25,8 @@ interface ISettingsState {
   maxDistance: number
   preferredCategories: Array<Category>,
   categories: Array<Category>,
-  redirect: boolean
+  redirect: boolean,
+  initDispatch: Function
 }
 
 interface ISettingsProps {
@@ -47,16 +48,22 @@ class Settings extends Component<ISettingsProps, ISettingsState> {
       maxDistance: 0,
       preferredCategories: [],
       categories: [],
-      redirect: false
+      redirect: false,
+      initDispatch: () => {
+        this.fetchAndUpdateCategories()
+        this.fetchAndUpdateUserData()
+      }
     }
-    setTimeout(() => this.fetchAndUpdateCategories(), 250)
-    setTimeout(() => this.fetchAndUpdateUserData(), 250)
+  }
+
+  public componentDidMount(): void {
+    this.state.initDispatch()
   }
 
   private fetchAndUpdateCategories(): void {
     this.getCategories()
       .then((categories: Array<Category>) => this.setState({...this.state, categories: categories}))
-      .catch((error: Error) => console.log(error))
+      .catch((error: Error) => console.error(error))
   }
 
   private async getCategories(): Promise<Array<Category>> {

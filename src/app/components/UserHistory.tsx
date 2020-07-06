@@ -20,6 +20,7 @@ interface IState {
   events?: Array<EventWithCategory>,
   error?: Error,
   eventDeleteId: string,
+  initDispatch: Function,
   dispatch: Function
 }
 
@@ -35,8 +36,15 @@ class Events extends Component<IProp, IState> {
       events: undefined,
       error: undefined,
       eventDeleteId: "",
+      initDispatch: () => {
+        this.getAllEvents()
+      },
       dispatch: () => {}
     }
+  }
+
+  public componentDidMount(): void {
+    this.state.initDispatch()
   }
 
   private onDeleteSubmit(id: string): void {
@@ -82,10 +90,6 @@ class Events extends Component<IProp, IState> {
     if (eventPromise != null) {
       eventPromise.then(onFetchEvents)
     }
-  }
-
-  public componentDidMount(): void {
-    this.getAllEvents()
   }
 
   private delete(id: string): void {

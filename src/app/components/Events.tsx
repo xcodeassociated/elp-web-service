@@ -43,6 +43,7 @@ interface IState {
   eventUpdateId: string,
   categories: Array<Category>,
   pointMode: any,
+  initDispatch: Function
   dispatch: Function
 }
 
@@ -83,16 +84,23 @@ class Events extends Component<IProp, IState> {
           }
         }
       },
+      initDispatch: () => {
+        this.fetchAndUpdateCategories()
+        this.getAllEvents()
+      },
       dispatch: () => {}
     }
-    setTimeout(() => this.fetchAndUpdateCategories(), 250)
     this.onCreateOrUpdateSubmit = this.onCreateOrUpdateSubmit.bind(this)
+  }
+
+  public componentDidMount(): void {
+    this.state.initDispatch()
   }
 
   private fetchAndUpdateCategories(): void {
     this.getCategories()
       .then((categories: Array<Category>) => this.setState({...this.state, categories: categories}))
-      .catch((error: Error) => console.log(error))
+      .catch((error: Error) => console.error(error))
   }
 
   private async getCategories(): Promise<Array<Category>> {
@@ -126,7 +134,6 @@ class Events extends Component<IProp, IState> {
               new EventCommand((this.state.eventUpdateId.length > 0) ? this.state.eventUpdateId : null,
                 this.state.eventCreateTitle, this.state.eventCreateDescription, this.state.eventCreateStart,
                 this.state.eventCreateStop, location, this.state.eventCreateCategories.map(e => e.id))
-            console.log(">>>> " + JSON.stringify(this.state.eventCreateCategories.map(e => e.id)))
             if (this.state.eventUpdateId.length > 0) {
               this.state.dispatch(this.update(event))
             } else {
@@ -239,10 +246,6 @@ class Events extends Component<IProp, IState> {
     if (eventPromise != null) {
       eventPromise.then(onFetchEvents)
     }
-  }
-
-  public componentDidMount(): void {
-    this.getAllEvents()
   }
 
   private create(event: EventCommand): void {
