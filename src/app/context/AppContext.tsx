@@ -5,9 +5,7 @@ import {Nav} from "react-bootstrap";
 import history from './History';
 import {connect} from 'react-redux';
 import Events from "../components/Events/Events";
-import {KeycloakEvent, KeycloakProvider, KeycloakTokens} from "@react-keycloak/web";
 import keycloak from "../components/Keycloak/Keycloak";
-import {KeycloakError} from "keycloak-js";
 import {loginAction, logoutAction, redirectHomeAction} from '../store/actions/Actions'
 import NotFound from "../components/error/NotFound";
 import "../style/App.css";
@@ -15,6 +13,7 @@ import "../style/AppRouter.css";
 import Settings from "../components/Settings/Settings";
 import UserHistory from "../components/UserHistory/UserHistory";
 import {hasToken} from "../services/TokenService";
+import {optional} from "../model/Types";
 
 type NamedProps = {
   data?: any
@@ -22,44 +21,37 @@ type NamedProps = {
 
 type PropsAppRouter = {
   children: ReactChild | NamedProps,
+  token: optional<string>,
   dispatch: Function
 }
 
-interface IStateAppRouter {
-}
+interface IStateAppRouter {}
 
 class AppContext extends Component<PropsAppRouter, IStateAppRouter> {
 
   constructor(props: Readonly<PropsAppRouter>) {
     super(props)
-    this.state = {}
-
     this.props.dispatch(redirectHomeAction(true))
   }
 
-  private onKeycloakEvent = (event: KeycloakEvent, error?: KeycloakError): void => {
-    console.info("Keycloak event: " + JSON.stringify(event))
-    if (error) {
-      console.error("Keycloak error: " + JSON.stringify(error))
+  componentDidUpdate(prevProps: Readonly<PropsAppRouter>, prevState: Readonly<IStateAppRouter>, snapshot?: any) {
+    if (this.props.token !== prevProps.token) {
+      if (this.props.token) {
+        this.updateKeycloakToken(this.props.token)
+      } else {
+        console.warn("Keycloak token prop null passed")
+      }
     }
   }
 
-  private onKeycloakTokens = (tokens: KeycloakTokens): void => {
-    console.info("Keycloak token: " + JSON.stringify(tokens))
-    if (tokens.token) {
-      console.info("Updating local storage token")
-      this.props.dispatch(loginAction(tokens.token))
-      this.props.dispatch(redirectHomeAction(false))
-    }
+  private updateKeycloakToken(token: string) {
+    console.info("Updating local storage token")
+    this.props.dispatch(loginAction(token))
+    this.props.dispatch(redirectHomeAction(false))
   }
 
   public render() {
     return (
-      <KeycloakProvider keycloak={keycloak}
-                        onEvent={this.onKeycloakEvent}
-                        onTokens={this.onKeycloakTokens}
-                        autoRefreshToken={true}
-      >
         <Router history={history}>
           <div className="grid-container">
             <div className="item1">
@@ -122,7 +114,6 @@ class AppContext extends Component<PropsAppRouter, IStateAppRouter> {
             </div>
           </div>
         </Router>
-      </KeycloakProvider>
     )
   }
 }
