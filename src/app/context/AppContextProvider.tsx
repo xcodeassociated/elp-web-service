@@ -54,7 +54,6 @@ class AppContextProvider extends Component<IAppContextProviderProps, IAppContext
       <KeycloakProvider keycloak={keycloak}
                         onEvent={this.onKeycloakEvent}
                         onTokens={this.onKeycloakTokens}
-                        autoRefreshToken={true}
                         initConfig={keycloakInitConfig}
       >
         <Provider store={this.state.store}>
