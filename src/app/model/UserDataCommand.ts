@@ -1,14 +1,16 @@
+import {Category} from "./Category";
+
 export interface IUserDataCommand {
   maxDistance: number
-  userPreferredCategories: Array<String>
+  preferredCategories: Array<Category>
 }
 
 export class UserDataCommand implements IUserDataCommand {
   maxDistance: number
-  userPreferredCategories: Array<String>
+  preferredCategories: Array<Category>
 
-  constructor(maxDistance: number, userPreferredCategories: Array<String>) {
+  constructor(maxDistance: number, userPreferredCategories: Array<Category>) {
     this.maxDistance = maxDistance;
-    this.userPreferredCategories = userPreferredCategories;
+    this.preferredCategories = userPreferredCategories;
   }
 }

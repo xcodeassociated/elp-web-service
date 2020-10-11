@@ -194,7 +194,16 @@
 }
 .pagination-info > .pagination-info-element {
   padding-bottom: 0.75rem;
-  padding-left: 3%;
+  /*padding-left: 3%;*/
+  /*padding-right: 3%;*/
+}
+
+.css-1yc4zyy-DropdownHandleComponent {
+  display: none;
+}
+
+.css-1aarvou-DropdownHandleComponent {
+  display: none;
 }
 
 .login-hint {

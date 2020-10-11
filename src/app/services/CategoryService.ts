@@ -20,7 +20,7 @@ export const fetchAllCategories = (): optional<Promise<Response>> => {
       mode: mode,
       headers: requestHeaders(token),
     }
-    return fetch(`${AppConfig.event_service_url}/event/api/v1/category`, requestOptions)
+    return fetch(`${AppConfig.event_service_url}/event/api/v1/category/paged`, requestOptions)
   } else {
     return null
   }

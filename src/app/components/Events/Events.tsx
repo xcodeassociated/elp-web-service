@@ -107,7 +107,8 @@ class Events extends Component<IProp, IState> {
     const response: optional<Response> = await fetchAllCategories()
     if (response && response.ok) {
       const data: string = await response.text()
-      const categories: Array<Category>= JSON.parse(data)
+      const paged: Page<Category> = JSON.parse(data)
+      const categories: Array<Category> = paged.content
       return categories
     } else {
       throw new Error("Could not fetch categories")
@@ -133,7 +134,7 @@ class Events extends Component<IProp, IState> {
             let event: EventCommand =
               new EventCommand((this.state.eventUpdateId.length > 0) ? this.state.eventUpdateId : null,
                 this.state.eventCreateTitle, this.state.eventCreateDescription, this.state.eventCreateStart,
-                this.state.eventCreateStop, location, this.state.eventCreateCategories.map(e => e.id))
+                this.state.eventCreateStop, location, this.state.eventCreateCategories)
             if (this.state.eventUpdateId.length > 0) {
               this.state.dispatch(this.update(event))
             } else {
@@ -389,7 +390,7 @@ class Events extends Component<IProp, IState> {
                           <button className="btn btn-default" onClick={this.onClearSubmit.bind(this)}>Clear</button>
                         </div>
                         <div className="form-group">
-                          <LocationPicker pointMode={this.state.pointMode} circleMode={circleMode} />
+                          <LocationPicker pointMode={this.state.pointMode} circleMode={circleMode} overlayAll={false} />
                         </div>
                       </form>
                     </td>

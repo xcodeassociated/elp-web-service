@@ -6,7 +6,6 @@ export interface IEvent extends IBase {
   start: number,
   stop: number,
   location: Array<Number>,
-  eventCategories: Array<String>
 }
 
 export class Event extends Base implements IEvent {
@@ -15,12 +14,10 @@ export class Event extends Base implements IEvent {
   start: number
   stop: number
   location: Array<Number>
-  eventCategories: Array<String>
-
 
   constructor(createdBy: string, createdDate: number, id: string, lastModifiedDate: number,
               modifiedBy: string, uuid: string, version: number, title: string, description: string,
-              start: number, stop: number, location: Array<Number>, eventCategories: Array<String>) {
+              start: number, stop: number, location: Array<Number>) {
 
     super(createdBy, createdDate, id, lastModifiedDate, modifiedBy, uuid, version)
 
@@ -29,6 +26,5 @@ export class Event extends Base implements IEvent {
     this.start = start
     this.stop = stop
     this.location = location
-    this.eventCategories = eventCategories
   }
 }

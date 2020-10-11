@@ -19,7 +19,7 @@ export const fetchUserData = (): Promise<Response> | null => {
       mode: mode,
       headers: requestHeaders(token),
     }
-    return fetch(`${AppConfig.event_service_url}/event/api/v1/userdata/data`, requestOptions)
+    return fetch(`${AppConfig.event_service_url}/event/api/v1/userdata`, requestOptions)
   } else {
     return null
   }

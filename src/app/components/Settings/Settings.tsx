@@ -13,6 +13,7 @@ import {optional} from "../../model/Types";
 import {fetchUserAccountData, updateUserAccountData} from "../../services/UserAccountService";
 import {UserAccountData} from "../../model/UserAccountData";
 import {UserAccountDataCommand} from "../../model/UserAccountDataCommand";
+import {Page} from "../../model/Page";
 
 interface ISettingsState {
   firstName: optional<string>,
@@ -70,7 +71,8 @@ class Settings extends Component<ISettingsProps, ISettingsState> {
     const response: optional<Response> = await fetchAllCategories()
     if (response && response.ok) {
       const data: string = await response.text()
-      const categories: Array<Category>= JSON.parse(data)
+      const paged: Page<Category> = JSON.parse(data)
+      const categories: Array<Category> = paged.content
       return categories
     } else {
       throw new Error("Could not fetch categories")
@@ -151,8 +153,7 @@ class Settings extends Component<ISettingsProps, ISettingsState> {
     })
       .catch((error: Error) => alert("Sorry, the data could not be saved"))
 
-    const userData: UserDataCommand = new UserDataCommand(this.state.maxDistance,
-    this.state.preferredCategories.map((e: Category) => e.id))
+    const userData: UserDataCommand = new UserDataCommand(this.state.maxDistance, this.state.preferredCategories)
     this.updateUserData(userData).then((data: UserData) => this.setState({
       ...this.state,
       maxDistance: data.maxDistance,

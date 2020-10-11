@@ -143,7 +143,8 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
     const response: optional<Response> = await fetchAllCategories()
     if (response && response.ok) {
       const data: string = await response.text()
-      const categories: Array<Category> = JSON.parse(data)
+      const paged: Page<Category> = JSON.parse(data)
+      const categories: Array<Category> = paged.content
       return categories
     } else {
       throw new Error("Could not fetch categories")
@@ -190,7 +191,7 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
     let timer = setInterval(() => {
       if (this.state.refreshOn) {
         this.reloadEvents()
-      }}, 10000)
+      }}, 1000)
     this.setState({...this.state, timer: timer})
   }
 
@@ -414,6 +415,7 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
                       <NumericInput min={1} max={10} value={this.state.selectedRange} onChange={(valueAsNumber: number) => {
                         this.setState({...this.state, selectedRange: valueAsNumber})
                       }} />
+                      <span> km</span>
                       <span className="locationInclude">
                         <Switch checked={this.state.includeRange}
                                 onChange={() => {this.setState({...this.state, includeRange: !this.state.includeRange})}}
@@ -498,6 +500,7 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
               <div className="pagination-info">
                 <div className="pagination-info-element">
                   <Select options={elementsPerPage} dropdownPosition="top"
+                          style={{width: '50px'}}
                           onChange={(values: Array<Selectable<number, number>>) =>
                             this.setState({...this.state, selectedElementsPerPage: values[0], currentPage: 0}, this.reloadEvents.bind(this))
                           }
@@ -505,6 +508,7 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
                 </div>
                 <div className="pagination-info-element">
                   <Select options={elementsSortBy} dropdownPosition="top"
+                          style={{width: '100px'}}
                           onChange={(values: Array<Selectable<number, string>>) =>
                             this.setState({...this.state, selectedElementsSortBy: values[0], currentPage: 0}, this.reloadEvents.bind(this))
                           }
@@ -512,6 +516,7 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
                 </div>
                 <div className="pagination-info-element">
                   <Select options={elementsSortDirection} dropdownPosition="top"
+                          style={{width: '50px'}}
                           onChange={(values: Array<Selectable<number, string>>) =>
                             this.setState({...this.state, selectedElementsSortDirection: values[0], currentPage: 0}, this.reloadEvents.bind(this))
                           }
@@ -519,7 +524,7 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
                 </div>
                 <div className="pagination-info-element">
                   <label>
-                    items:
+                        items:
                   </label>
                 </div>
                 <div className="pagination-info-element">
@@ -604,7 +609,7 @@ class Home extends Component<IHomeProps & GeolocatedProps, IHomeState> {
               : null}
           </Map>
         </div>
-        <div className="item4">Footer</div>
+        <div className="item4"></div>
       </div>
     )
   }

@@ -55,7 +55,7 @@ export default class Item extends Component<IItemProps> {
             {this.props.title}
           </div>
           <div className="inline item-button">
-            {(this.props.item.registered) ?
+            {(this.props.item.userDetails && this.props.item.userDetails.registered) ?
               <button onClick={this.leave.bind(this)}>Leave</button>
               :
               (this.props.item.stop && this.props.item.stop >= Date.now())

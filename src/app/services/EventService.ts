@@ -13,8 +13,9 @@ const requestHeaders = (token: string) => [
   ['Authorization', `Bearer ${token}`]
 ]
 
-const makeUrl = (path: string, page: number = 1, size: number = 10, sortBy: string, sortDirection: string): URL => {
-  let url: URL = new URL(path), params = {page: page, size: size, sort_by: sortBy, sort_how: sortDirection}
+const makeUrl = (path: string, page: number, size: number, sortBy: string,
+                 sortDirection: string, includeUserDetails: boolean): URL => {
+  let url: URL = new URL(path), params = {page: page, size: size, sort_by: sortBy, sort_how: sortDirection, user_details: includeUserDetails}
   Object.keys(params).forEach(key => url.searchParams.append(key, params[key]))
   return url
 }
@@ -28,8 +29,8 @@ export const fetchAllUserEvents = (page: number = 1, size: number = 1000, sortBy
       mode: mode,
       headers: requestHeaders(token),
     }
-    const path: string = `${AppConfig.event_service_url}/event/api/v1/events/by/createdby/` + getUserSub(token) + `/paged/data`
-    const url: URL = makeUrl(path, page, size, sortBy, sortDirection)
+    const path: string = `${AppConfig.event_service_url}/event/api/v1/events/by/createdby/` + getUserSub(token) + `/paged`
+    const url: URL = makeUrl(path, page, size, sortBy, sortDirection, true)
     return fetch(url.toString(), requestOptions)
   } else {
     return null
@@ -45,7 +46,7 @@ export const fetchAllActiveEvents = (page: number = 1, size: number = 10, sortBy
       mode: mode,
       headers: requestHeaders(token),
     }
-    const url: URL = makeUrl(`${AppConfig.event_service_url}/event/api/v1/events/active/paged/data`, page, size, sortBy, sortDirection)
+    const url: URL = makeUrl(`${AppConfig.event_service_url}/event/api/v1/events/active/paged`, page, size, sortBy, sortDirection, true)
     return fetch(url.toString(), requestOptions)
   } else {
     return null
@@ -62,7 +63,7 @@ export const fetchAllRecommendedEvents = (location: Location, page: number = 1, 
       headers: requestHeaders(token),
       body: JSON.stringify(location)
     }
-    const url: URL = makeUrl(`${AppConfig.event_service_url}/event/api/v1/events/preferred/paged/data`, page, size, sortBy, sortDirection)
+    const url: URL = makeUrl(`${AppConfig.event_service_url}/event/api/v1/events/preferred/paged`, page, size, sortBy, sortDirection, true)
     return fetch(url.toString(), requestOptions)
   } else {
     return null
@@ -79,7 +80,7 @@ export const searchEvents = (search: EventSearch, page: number = 1, size: number
       headers: requestHeaders(token),
       body: JSON.stringify(search)
     }
-    const url: URL = makeUrl(`${AppConfig.event_service_url}/event/api/v1/events/search/data`, page, size, sortBy, sortDirection)
+    const url: URL = makeUrl(`${AppConfig.event_service_url}/event/api/v1/events/search`, page, size, sortBy, sortDirection, true)
     return fetch(url.toString(), requestOptions)
   } else {
     return null
