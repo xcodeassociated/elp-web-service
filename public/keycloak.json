@@ -2,7 +2,7 @@
   "realm": "service",
   "resource": "frontend",
   "ssl-required": "external",
-  "auth-server-url": "http://localhost:9090/auth",
+  "auth-server-url": "https://cnf.sh/auth",
   "enable-cors": true,
   "cors-allowed-methods": "POST,PUT,DELETE,GET,HEAD,OPTIONS",
   "cors-allowed-headers": "Access-Control-Allow-Origin,Origin,Accept,X-Requested-With,Content-Type,Access-Control-Request-Method,Access-Control-Request-Headers",
